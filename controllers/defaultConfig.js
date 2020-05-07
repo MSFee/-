@@ -1,6 +1,6 @@
 const config = {
     database: {
-      DATABASE: 'test',
+      DATABASE: 'sqlTest',
       USERNAME: 'root',
       PASSWORD: 'woaini',
       PORT: '3306',
