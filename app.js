@@ -26,7 +26,7 @@ app.use(cors({
   allowMethods: ['GET', 'POST', 'DELETE'],
   allowHeaders: ['Content-Type', 'Authorization', 'Accept'],
 }));
-// middlewares  sd
+// middlewares  sddsd
 app.use(bodyparser({
   enableTypes:['json', 'form', 'text'],
   multipart:true,
