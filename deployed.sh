@@ -1,3 +1,3 @@
- cd /root/sqlServer/sqlServer/
+ cd /root/sqlServer/
  git pull
  npm i
