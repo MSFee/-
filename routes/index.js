@@ -173,6 +173,24 @@ router.post('/createPaper', async ctx => {
     }
   }
 })
+
+// 获取所有的试卷信息
+router.get('/getAllPaperList', async ctx => {
+    try{
+       const list = await paperSql.queryAllPaperList();
+       return ctx.body = {
+         list,
+         error: 0,
+       }
+    }
+    catch(e) {
+      return ctx.body = {
+        message: e.toString(),
+        error: -2
+      }
+    }
+})
+
 // 教师创建题目
 router.post('/createTitle', async ctx => {
   const parmas = ctx.request.body;
@@ -217,4 +235,30 @@ router.post('/createTitle', async ctx => {
     }
   }
 })
+
+// 获取某个试卷下的所有题目信息
+router.get('/getAllTitle', async ctx => {
+  const paperId = ctx.query.paperId;
+  if(!paperId) {
+    return ctx.body = {
+      message: '试卷ID不能为空',
+      error: -1
+    }
+  }
+  try{
+    const list = await titleSql.queryAllTitleByPaperId(paperId);
+    return ctx.body = {
+      list,
+      error: 0,
+    }
+  }
+  catch(e) {
+    return ctx.body = {
+      message: e.toString(),
+      error: -2
+    }
+  }
+})
+
+
 module.exports = router

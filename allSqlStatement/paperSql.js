@@ -17,6 +17,11 @@ let parperSql = {
     queryPaperInfo: function(paperId) {
         let _sql = `select * from paper_info where paperId = ${paperId}`
         return allServices.query(_sql);
+    },
+    // 查询所有的试卷
+    queryAllPaperList: function() {
+        let _sql = `select * from paper_info`;
+        return allServices.query(_sql);
     }
 }
 module.exports = parperSql;

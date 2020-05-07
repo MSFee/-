@@ -14,6 +14,11 @@ let titleSql = {
         )
         `;
         return allServices.query(_sql);
+    },
+    // 根据试卷ID查询属于该试卷下的所有题目
+    queryAllTitleByPaperId: function(paperId){
+        let _sql = `select titleId, titleName, answer, createTime, count, maxScore from title_info where paperId = ${paperId}`;
+        return allServices.query(_sql);
     }
 }
 module.exports = titleSql;
