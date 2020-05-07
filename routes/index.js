@@ -12,6 +12,7 @@ const getToken = require('../token/getToken');
 const userSql = require('../allSqlStatement/userSql')
 const paperSql = require('../allSqlStatement/paperSql');
 const titleSql = require('../allSqlStatement/titleSql');
+const practiceSql = require('../allSqlStatement/practiceSql');
 
 let transporter = nodemailer.createTransport({
   service: 'qq',
@@ -260,5 +261,36 @@ router.get('/getAllTitle', async ctx => {
   }
 })
 
+// 学生完成题目接口
+router.post('/completeTitle', async ctx => {
+    const params = ctx.request.body;
+    const titleId = params.titleId;
+    const answer = params.answer;
+    if(!titleId) {
+      return ctx.body = {
+        message: '题目ID不能为空',
+        error: -1
+      }
+    }
+    if(!answer) {
+      return ctx.body = {
+        message: '答案不能为空',
+        error: -1
+      }
+    }
+    let result = null;
+    try{
+      result = await practiceSql.perform(answer);
+    }catch(e) {
+      return ctx.body = {
+        result: e.toString(),
+        error: -2
+      }
+    }
+    return ctx.body = {
+      message: result,
+      error: 0
+    }
+})
 
 module.exports = router

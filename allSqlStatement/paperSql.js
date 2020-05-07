@@ -4,11 +4,12 @@ const allServices = require('./index')
 let parperSql = {
     // 新增一张试卷
     addPaper: function(parmas) {
-        let _sql = `insert into paper_info (paperName,createTime,workNumber)
+        let _sql = `insert into paper_info (paperName,createTime,workNumber, count)
         Values (
             '${parmas.paperName}',
             '${parmas.createTime}',
-            ${parmas.workNumber}
+            ${parmas.workNumber},
+            0
         )
         `;
         return allServices.query(_sql);

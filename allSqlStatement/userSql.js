@@ -5,9 +5,9 @@ let userSql = {
   // 向学生数据中添加一名学生
   addStudent: function (params) {
     let _sql = `insert into student_info  
-        (studentId, username, password, email, school, class, professional) Values (
+        (studentId, userName, password, email, school, class, professional) Values (
             '${params.studentId}',
-            '${params.username}',
+            '${params.userName}',
             '${params.password}',
             '${params.email}',
             '${params.school}',
@@ -21,9 +21,9 @@ let userSql = {
   // 向教师数据中添加一名教师
   addTeacher: function (params) {
     let _sql = `insert into teacher_info  
-            (workNumber, username, school, email, password) Values (
+            (workNumber, userName, school, email, password) Values (
                 ${params.workNumber},
-                '${params.username}',
+                '${params.userName}',
                 '${params.school}',
                 '${params.email}',
                 '${params.password}'
