@@ -6,6 +6,8 @@ const nodemailer = require('nodemailer')
 const moment = require('moment')
 const axios = require('axios')
 
+const setToken = require('../token/index');
+
 const userSql = require('../allSqlStatement/userSql')
 
 let transporter = nodemailer.createTransport({
@@ -78,6 +80,64 @@ router.post('/register', async ctx => {
       message: e.toString(),
       error: -2
     })
+  }
+})
+
+// 学生、教师登录接口
+router.post('/login', async ctx => {
+  const params = ctx.request.body;
+  const status = params.status;
+  try {
+    if(status == 0) {
+      const isStudentId = await userSql.queryPasswordByStudentId(params.studentId);
+      if(!isStudentId.length) {
+        return ctx.body = {
+          message: '不存在该学号',
+          error: -1
+        }
+      }
+      const password = isStudentId[0].password;
+      if(password !== params.password) {
+        return ctx.body = {
+          message: '密码错误',
+          error: -1
+        }
+      }
+      const token = setToken(params, status);
+      // 学生登录
+      return ctx.body = {
+        message: "登录成功",
+        token: token,
+        error: 0
+      }
+    }else {
+      const isWorkNumber = await userSql.queryPasswordByWorkNumber(params.workNumber);
+      if(!isWorkNumber.length) {
+        return ctx.body = {
+          message: '不存在该工号',
+          error: -1
+        }
+      }
+      const password = isWorkNumber[0].password;
+      if(password !== params.password) {
+        return ctx.body = {
+          message: '密码错误',
+          error: -1
+        }
+      }
+      const token = setToken(params, status);
+      // 教师登录
+      return ctx.body = {
+        message: "登录成功",
+        token: token,
+        error: 0
+      }
+    }
+  }catch(e) {
+    return ctx.body = {
+      message: e.toString(),
+      error: -2
+    }
   }
 })
 
