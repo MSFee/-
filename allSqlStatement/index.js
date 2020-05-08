@@ -25,7 +25,7 @@ let allServices = {
           }
       })
     })
-  }
+  },
 };
 
 module.exports = allServices;

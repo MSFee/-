@@ -19,6 +19,11 @@ let titleSql = {
     queryAllTitleByPaperId: function(paperId){
         let _sql = `select titleId, titleName, answer, createTime, count, maxScore from title_info where paperId = ${paperId}`;
         return allServices.query(_sql);
+    },
+    // 根据题目ID查询题目信息
+    queryInfoById: function(titleId) {
+        let _sql = `select * from title_info where titleId = ${titleId};`;
+        return allServices.query(_sql);
     }
 }
 module.exports = titleSql;

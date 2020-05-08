@@ -14,7 +14,7 @@ let allServices = {
           if(err){
             reject(err)
           }else {
-            connection.query(sql,values,(err,rows) => {
+            connection.query(sql,values,(err,rows, fileds) => {
                 if(err){
                   reject(err)
                 }else {
@@ -25,7 +25,7 @@ let allServices = {
           }
       })
     })
-  }
+  },
 };
 
 module.exports = allServices;
