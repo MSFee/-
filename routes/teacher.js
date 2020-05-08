@@ -128,7 +128,7 @@ router.put('/publishPaper', async ctx => {
         }
     }
     try{
-        await paperSql.publishPaper(paperId);
+        await paperSql.publishPaper(paperId, issued);
         return ctx.body = {
             message: issued ? '试卷发布成功' : "试卷撤销发布成功",
             error: 0

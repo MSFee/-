@@ -11,7 +11,7 @@ let practiceSql = {
         let _sql = `CREATE TEMPORARY TABLE ${tableName} SELECT * FROM ${oldTableName};`
         return allServices.query(_sql);
     },
-    // 查询随即表数据
+    // 查询临时表数据
     queryDataTemTable: function(tableName) {
         let _sql = `select * from ${tableName}`;
         console.log(_sql)

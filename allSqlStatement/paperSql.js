@@ -51,8 +51,8 @@ let parperSql = {
     return allServices.query(_sql)
   },
   // 教师发布试卷
-  publishPaper: function (paperId) {
-    let _sql = `update paper_info set issued = 1 where paperId = ${paperId}`
+  publishPaper: function (paperId, issued) {
+    let _sql = `update paper_info set issued = ${issued} where paperId = ${paperId}`
     return allServices.query(_sql)
   },
   // 删除试卷

@@ -31,10 +31,10 @@ let transporter = nodemailer.createTransport({
 
 // transporter.sendMail(mailOptions, (err, info) => {
 //   if(err) {
-//     console.log(err);
-//     return;
+//     console.log(err)
+//     return
 //   }
-//   console.log('发送成功');
+//   console.log('发送成功')
 // })
 
 // 学生、教师注册接口
@@ -148,10 +148,6 @@ router.post('/login', async ctx => {
   }
 })
 
-
-
-
-
 // 获取所有的试卷信息
 router.get('/getAllPaperList', async ctx => {
   try {
@@ -168,8 +164,6 @@ router.get('/getAllPaperList', async ctx => {
   }
 })
 
-
-
 // 获取某个试卷下的所有题目信息
 router.get('/getAllTitle', async ctx => {
   const paperId = ctx.query.paperId
@@ -182,7 +176,7 @@ router.get('/getAllTitle', async ctx => {
   try {
     const list = await titleSql.queryAllTitleByPaperId(paperId)
     list.map(item => {
-      item.createTime = moment(item.createTime).format('YYYY-MM-DD HH:mm:ss');
+      item.createTime = moment(item.createTime).format('YYYY-MM-DD HH:mm:ss')
     })
     return (ctx.body = {
       list,
@@ -196,11 +190,21 @@ router.get('/getAllTitle', async ctx => {
   }
 })
 
+// 用于返回错误信息
+function errorMessFun (ctx, message) {
+  return (ctx.body = {
+    errormessage: message,
+    score: 0,
+    isRight: false,
+    error: 0
+  })
+}
+
 // 学生完成题目接口
 router.post('/completeTitle', async ctx => {
   const params = ctx.request.body
   const titleId = params.titleId
-  const answer = params.answer.trim()
+  let answer = params.answer.trim() // 学生提交答案
   if (!titleId) {
     return (ctx.body = {
       message: '题目ID不能为空',
@@ -214,84 +218,118 @@ router.post('/completeTitle', async ctx => {
     })
   }
 
-  const methodsFlag = answer.split(' ')[0];
-
+  const methodsFlag = answer.split(' ')[0]
+  let reTurnBody = null;
+  let flag = true // 判断该题是否做对了
+  let performError = false // 判断是否执行报错
   let title = await titleSql.queryInfoById(titleId) // 查询正确的答案
-  const trueAnswer = title[0].answer;
-  if(trueAnswer.split(' ')[0] !== methodsFlag) {
-    return ctx.body = {
-      errormessage: '您所提交的答案与题目要求不一致',
-      score: 0,
-      isRight: false,
-      error: 0
-    }
+  let trueAnswer = title[0].answer // 正确答案
+
+  let temStuList = [] // 用于存储学生sql语句的执行结果
+  let temTeaList = [] // 用于存储教师sql语句的执行结果
+
+  if (trueAnswer.split(' ')[0] !== methodsFlag) {
+    return  errorMessFun(ctx, '答案错误')
   }
   if (methodsFlag !== 'select') {
     // 非查询操作
-    const arr = answer.split(' ');
+
+    // 提取学生答案中涉及到的表名
+    const arr = answer.split(' ')
     const tem = arr.filter(item => {
-      if(item.indexOf("_info") !== -1) {
-        return item;
+      if (item.indexOf('_info') !== -1) {
+        return item
       }
     })
-    if(!tem.length) {
-      return ctx.body = {
-        errormessage: '您所提交的答案与题目要求不一致',
-        score: 0,
-        isRight: false,
-        error: 0
+    // 提取教师答案中涉及到的表名
+    const arrTea = trueAnswer.split(' ')
+    const temTea = arrTea.filter(item => {
+      if (item.indexOf('_info') !== -1) {
+        return item
       }
+    })
+    // 比对提取到的两个表名
+    if (temTea.join(',') !== tem.join(',')) {
+      return errorMessFun(ctx, '答案错误')
     }
-    const hash = Math.random().toString(36).substr(2);
-    const hash2 = Math.random().toString(36).substr(2);
-    const tableName = tem[0]+hash; // 生成临时随机表的表名
-    const tableName_Teacher = tem[0] + hash2; // 生成教师执行sql临时表
-    await practiceSql.createTemTable(tableName, tem[0]);
-    let result = await practiceSql.queryDataTemTable(tableName); // 查询临时表数据
-    await practiceSql.deleteTemTable(tableName); // 删除临时表
-    return ctx.body = {
-      list: result
+    // 如果没有提取到表名，答案错误
+    if (!tem.length) {
+      return errorMessFun(ctx, '答案错误')
+    }
+
+    const hash = Math.random()
+      .toString(36)
+      .substr(2)
+    const hash2 = Math.random()
+      .toString(36)
+      .substr(2)
+
+    const tableName = tem[0] + hash // 生成执行学生结果的临时随机表
+    const tableNameTea = tem[0] + hash2 // 生成执行教师sql临时表
+
+    try {
+      await practiceSql.createTemTable(tableName, tem[0]) // 创建学生临时表
+      await practiceSql.createTemTable(tableNameTea, tem[0]) // 创建教师临时表
+
+      // 在学生临时表中执行学生sql语句
+      // 1、替换sql语句
+      answer = answer.replace(/\w+_info/g, () => {
+        return tableName
+      })
+      // 2、在临时表中执行sql语句
+      await practiceSql.perform(answer)
+      // 3、查询学生临时表中的所有数据
+      temStuList = await practiceSql.queryDataTemTable(tableName)
+      // 在教师临时表执行正确的sql语句
+      // 1、替换sql语句
+      trueAnswer = trueAnswer.replace(/\w+_info/g, () => {
+        return tableNameTea
+      })
+      // 2、在临时表中执行sql语句
+      await practiceSql.perform(trueAnswer)
+      // 3、查询教师临时表中的所有数据
+      temTeaList = await practiceSql.queryDataTemTable(tableNameTea)
+    } catch (e) {
+      // 记录错误的返回体信息，不能直接返回，需要将临时表清楚，并记录错误状态
+      performError = true;
+      reTurnBody = errorMessFun(ctx, `答案错误,错误信息为：${e.toString()}`)
+    } finally {
+      await practiceSql.deleteTemTable(tableName) // 删除临时表
+      await practiceSql.deleteTemTable(tableNameTea) // 删除教师临时表
     }
   } else {
     // 查询操作
-    let result = null
-    let flag = true // 判断该题是否做对了
-    let errormessage = null
-    let trueResult = null
 
     try {
-      result = await practiceSql.perform(answer)
-      trueResult = await practiceSql.perform(trueAnswer)
+      // 执行学生sql语句
+      temStuList = await practiceSql.perform(answer)
+      // 执行教师sql语句
+      temTeaList = await practiceSql.perform(trueAnswer)
     } catch (e) {
-      flag = false // 表明该题错误
-      errormessage = e.toString()
-    }
-    // 提交结果和正确结果不相同
-    if (JSON.stringify(result) !== JSON.stringify(trueResult)) {
-      flag = false
-    }
-
-    // 该题错误的返回结果
-    if (!flag) {
-      return (ctx.body = {
-        errormessage: errormessage ? errormessage : '结果与正确答案不一致',
-        youResult: result,
-        trueResult,
-        score: 0,
-        isRight: false,
-        error: 0
-      })
-    } else {
-      // 该题正确的返回结果
-      return (ctx.body = {
-        truemessage: '正确!',
-        trueResult,
-        isRight: true,
-        score: 10,
-        error: 0
-      })
+       return errorMessFun(ctx, `答案错误,错误信息为：${e.toString()}`)
     }
   }
+
+  if(performError) {
+    return reTurnBody;
+  }
+  // 提交结果和正确结果不相同
+  if (JSON.stringify(temStuList) !== JSON.stringify(temTeaList)) {
+     flag = false
+  }
+  // 该题错误的返回结果
+  if (!flag) {
+    return errorMessFun(ctx, '答案错误!')
+  } else {
+    // 该题正确的返回结果
+    return (ctx.body = {
+      truemessage: '答案正确!',
+      isRight: true,
+      score: 10,
+      error: 0
+    })
+  }
+
 })
 
 module.exports = router
