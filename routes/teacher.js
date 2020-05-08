@@ -5,7 +5,6 @@ const router = require('koa-router')()
 const nodemailer = require('nodemailer')
 const moment = require('moment')
 const axios = require('axios')
-
 const setToken = require('../token/index')
 const getToken = require('../token/getToken')
 
@@ -52,7 +51,7 @@ router.post('/createPaper', async ctx => {
     }
     try {
       // 获取试卷创建时间
-      const createTime = moment(new Date()).format('YYYY-MM-DD hh:mm:ss')
+      const createTime = moment(new Date).format('YYYY-MM-DD HH:mm:ss')
       params.createTime = createTime
       params.workNumber = workNumber
       await paperSql.addPaper(params)
@@ -97,7 +96,7 @@ router.post('/createTitle', async ctx => {
         })
       }
       // 获取题目创建时间
-      const createTime = moment(new Date()).format('YYYY-MM-DD hh:mm:ss')
+      const createTime = moment(new Date()).format('YYYY-MM-DD HH:mm:ss')
       parmas.createTime = createTime
       await titleSql.addtitle(parmas)
       return (ctx.body = {
@@ -183,10 +182,10 @@ router.get('/checkInformation', async ctx => {
        }
      }
      const paperInfo = paperInfoList[0];
-     paperInfo.createTime = moment(paperInfo.createTime).format('YYYY-MM-DD hh:mm:ss');
+     paperInfo.createTime = moment(paperInfo.createTime).format('YYYY-MM-DD HH:mm:ss');
      const titleList = await titleSql.queryAllTitleByPaperId(paperId);
      titleList.map(item => {
-       item.createTime = moment(item.createTime).format('YYYY-MM-DD hh:mm:ss');
+       item.createTime = moment(item.createTime).format('YYYY-MM-DD HH:mm:ss');
      })
      return ctx.body = {
           paperInfo,
@@ -201,4 +200,61 @@ router.get('/checkInformation', async ctx => {
    }
 })
 
+// 教师删除某一个题目
+router.delete('/deleteTitle', async ctx => {
+  const titleId = ctx.query.titleId;
+  if(!titleId) {
+    return ctx.body = {
+       message: '题目ID不能为空',
+       error: -1
+    }
+  }
+  try{
+    await titleSql.deleteTitle(titleId);
+    return ctx.body = {
+      message: '题目删除成功',
+      error: -0
+    }
+  }catch(e) {
+    return ctx.body = {
+      message: e.toString(),
+      error: -2
+    }
+  }
+})
+
+// 教师修改题目
+router.post('/changeTitleInfo', async ctx => {
+  const params = ctx.request.body;
+  if(!params.titleName) {
+    return ctx.body = {
+      message: '题目名称不能为空',
+      error: -1
+    }
+  }
+  if(!params.answer) {
+    return ctx.body = {
+      message: '题目答案不能为空',
+      error: -1
+    }
+  }
+  if(!params.titleId) {
+    return ctx.body = {
+      message: '题目ID不能为空',
+      error: -1,
+    }
+  }
+  try{
+    await titleSql.changeTitleInfo(params);
+    return ctx.body = {
+      message: '题目修改成功',
+      error: 0
+    }
+  }catch(e) {
+    return ctx.body = {
+      message: e.toString(),
+      error: 0
+    }
+  }
+})
 module.exports = router

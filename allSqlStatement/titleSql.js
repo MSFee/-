@@ -24,6 +24,16 @@ let titleSql = {
     queryInfoById: function(titleId) {
         let _sql = `select * from title_info where titleId = ${titleId};`;
         return allServices.query(_sql);
-    }
+    },
+     // 删除题目
+     deleteTitle: function(titleId) {
+         let _sql = `delete from title_info where titleId = ${titleId}`;
+         return allServices.query(_sql);
+     },
+     // 修改题目信息
+     changeTitleInfo: function(parmas) {
+        let _sql = `update title_info set titleName = '${parmas.titleName}', answer = '${parmas.answer}' where titleId = ${parmas.titleId};`;
+        return allServices.query(_sql);
+     }
 }
 module.exports = titleSql;

@@ -182,7 +182,7 @@ router.get('/getAllTitle', async ctx => {
   try {
     const list = await titleSql.queryAllTitleByPaperId(paperId)
     list.map(item => {
-      item.createTime = moment(item.createTime).format('YYYY-MM-DD hh:mm:ss');
+      item.createTime = moment(item.createTime).format('YYYY-MM-DD HH:mm:ss');
     })
     return (ctx.body = {
       list,

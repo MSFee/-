@@ -50,7 +50,22 @@ let userSql = {
     // 根据工号查询教师密码
   queryPasswordByWorkNumber: function(workNumber) {
     let _sql = `select password from teacher_info where workNumber = ${workNumber}`;
-        return allServices.query(_sql);
- }
+    return allServices.query(_sql);
+ },
+ // 根据工号查询教师名称
+ queryNameByWorkNumber: function(workNumber) {
+   let _sql = `select userName from teacher_info where workNumber = ${workNumber}`;
+   return allServices.query(_sql);
+ },
+  // 通过学校查询教师工号
+  queryWorkNumberBySchool: function(school) {
+    let _sql = `select workNumber from teacher_info where school = '${school}'`;
+    return allServices.query(_sql);
+  },
+  // 通过名称查询教师工号
+  queryWorkNumberByName: function(userName) {
+    let _sql = `select workNumber from teacher_info where userName = '${userName}'`;
+    return allServices.query(_sql);
+  }
 }
 module.exports = userSql

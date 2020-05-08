@@ -10,6 +10,7 @@ const cors = require('koa-cors');
 
 const index = require('./routes/index');
 const teacher = require('./routes/teacher');
+const student = require('./routes/student');
 
 // error handler
 onerror(app);
@@ -85,6 +86,7 @@ app.use(session(CONFIG, app));
 
 app.use(index.routes(), index.allowedMethods());
 app.use(teacher.routes(), teacher.allowedMethods());
+app.use(student.routes(), student.allowedMethods());
 
 // error-handling
 app.on('error', (err, ctx) => {
