@@ -27,7 +27,7 @@ let parperSql = {
     },
     // 老师查询自己所创建的试卷
     queryMyPaperList: function(workNumber) {
-        let _sql = `select * from paper_info where workNumber = ${workNumber};`;
+        let _sql = `select paperId, paperName from paper_info where workNumber = ${workNumber};`;
         return allServices.query(_sql);
     }
 }

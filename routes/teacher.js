@@ -23,6 +23,9 @@ router.get('/queryMyPaperList', async ctx => {
     const workNumber = res_token.uniqueIdentifier // 从token中获取教师工号
     try{
         const list = await paperSql.queryMyPaperList(workNumber);
+        list.map(item => {
+            
+        })
         return ctx.body = {
             list,
             error: 0
