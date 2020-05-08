@@ -24,7 +24,7 @@ router.get('/queryMyPaperList', async ctx => {
     try{
         const list = await paperSql.queryMyPaperList(workNumber);
         list.map(item => {
-            
+
         })
         return ctx.body = {
             list,
@@ -66,6 +66,139 @@ router.post('/createPaper', async ctx => {
         error: -2
       })
     }
-  })
+})
+// 教师创建题目
+router.post('/createTitle', async ctx => {
+    const parmas = ctx.request.body
+    if (!parmas.paperId) {
+      return (ctx.body = {
+        message: '试卷ID不能为空',
+        error: -1
+      })
+    }
+    if (!parmas.titleName) {
+      return (ctx.body = {
+        message: '题目名称不能为空',
+        error: -1
+      })
+    }
+    if (!parmas.answer) {
+      return (ctx.body = {
+        message: '答案不能为空',
+        error: -1
+      })
+    }
+    try {
+      const isPaperId = await paperSql.queryPaperInfo(parmas.paperId)
+      if (!isPaperId.length) {
+        return (ctx.body = {
+          message: '无效的试卷ID',
+          error: -1
+        })
+      }
+      // 获取题目创建时间
+      const createTime = moment(new Date()).format('YYYY-MM-DD hh:mm:ss')
+      parmas.createTime = createTime
+      await titleSql.addtitle(parmas)
+      return (ctx.body = {
+        message: '题目创建成功',
+        error: 0
+      })
+    } catch (e) {
+      return (ctx.body = {
+        message: e.toString(),
+        error: -2
+      })
+    }
+})
+
+// 教师发布试卷/或者撤销发布
+router.put('/publishPaper', async ctx => {
+    const paperId = ctx.request.body.paperId;
+    const issued = ctx.request.body.issued;
+    if(!paperId) {
+        return ctx.body = {
+            message: '试卷ID不能为空',
+            error: -1
+        }
+    }
+    if(issued !== 1 && issued !== 0) {
+        return ctx.body = {
+            message: '无效的发布状态',
+            error: -1
+        }
+    }
+    try{
+        await paperSql.publishPaper(paperId);
+        return ctx.body = {
+            message: issued ? '试卷发布成功' : "试卷撤销发布成功",
+            error: 0
+        }
+    }catch(e) {
+        return ctx.body = {
+            message: e.toString(),
+            error: -2
+        }
+    }
+})
+
+// 教师删除试卷
+router.delete('/deletePaper', async ctx => {
+  const paperId = ctx.query.paperId;
+  if(!paperId) {
+    return ctx.body = {
+      message: '试卷ID不能为空',
+      error: -1
+    }
+  }
+  try{
+    await paperSql.deletePaper(paperId);
+    return ctx.body = {
+      message: '删除试卷成功',
+      error: -0
+    }
+  }catch(e) {
+    return ctx.body = {
+      message: e.toString(),
+      error: -2
+    }
+  }
+})
+
+// 教师查看试卷下的题目信息以及试卷信息
+router.get('/checkInformation', async ctx => {
+   const paperId = ctx.query.paperId;
+   if(!paperId) {
+     return ctx.body = {
+       message: '试卷ID不能为空',
+       error: -1
+     }
+   }
+   try{
+     const paperInfoList = await paperSql.queryPaperInfo(paperId);
+     if(!paperInfoList.length) {
+       return ctx.body = {
+         message: "无效的试卷ID",
+         error: -1
+       }
+     }
+     const paperInfo = paperInfoList[0];
+     paperInfo.createTime = moment(paperInfo.createTime).format('YYYY-MM-DD hh:mm:ss');
+     const titleList = await titleSql.queryAllTitleByPaperId(paperId);
+     titleList.map(item => {
+       item.createTime = moment(item.createTime).format('YYYY-MM-DD hh:mm:ss');
+     })
+     return ctx.body = {
+          paperInfo,
+          titleList,
+          error: 0
+     }
+   }catch(e) {
+     return ctx.body = {
+       message: e.toString(),
+       error: -2
+     }
+   }
+})
 
 module.exports = router

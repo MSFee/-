@@ -29,6 +29,17 @@ let parperSql = {
     queryMyPaperList: function(workNumber) {
         let _sql = `select paperId, paperName from paper_info where workNumber = ${workNumber};`;
         return allServices.query(_sql);
+    },
+    // 教师发布试卷
+    publishPaper: function(paperId) {
+        let _sql = `update paper_info set issued = 1 where paperId = ${paperId}`;
+        return allServices.query(_sql);
+    },
+    // 删除试卷
+    deletePaper: function(paperId) {
+        let _sql1 = `delete from paper_info where paperId = ${paperId};`;
+        let _sql2 = `delete from title_info where paperId = ${paperId};`;
+        return allServices.transaction([_sql1, _sql2]);
     }
 }
 module.exports = parperSql;
