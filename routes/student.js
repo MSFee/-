@@ -426,9 +426,13 @@ router.get('/getAllTitleID', async ctx => {
 router.get('/getTitleInfo', async ctx => {
   const titleId = ctx.query.titleId
   try{
-    const obj = await titleSql.queryInfoById(titleId);
+    const list = await titleSql.queryInfoDetailById(titleId);
+    const obj = list[0];
+    const paperNameList = await paperSql.queryPaperDetailInfo(obj.paperId);
+    obj.paperName = paperNameList[0].paperName;
+    delete obj.paperId
     return ctx.body = {
-      info: obj[0],
+      info: obj,
       error: 0
     }
   }catch(e){

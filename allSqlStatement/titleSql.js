@@ -25,6 +25,11 @@ let titleSql = {
         let _sql = `select * from title_info where titleId = ${titleId};`;
         return allServices.query(_sql);
     },
+    // 根据题目ID查询题目部分
+    queryInfoDetailById: function(titleId) {
+        let _sql = `select titleId, titleName, paperId from title_info where titleId = ${titleId};`;
+        return allServices.query(_sql);
+    },
      // 删除题目
      deleteTitle: function(titleId) {
          let _sql = `delete from title_info where titleId = ${titleId}`;
