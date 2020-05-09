@@ -130,4 +130,230 @@ router.get('/getPaperList', async ctx => {
   }
 })
 
+// 保存学生的做题记录
+async function keepRecord (titleId, studentId, answer, trueAnswer, isRight) {
+  answer = answer.replace(/\'/g, '"')
+  trueAnswer = trueAnswer.replace(/\'/g, '"')
+  const complateTime = moment(new Date()).format('YYYY-MM-DD HH:mm:ss')
+  try {
+    // 根据学生ID和题目ID查询学生是否做过该题，如果做过则修改错题记录，如果没有则新增错题记录
+    const errorList = await complateTitleSql.queryScordByID(titleId, studentId)
+    if (errorList.length) {
+      // 已经存在错题了
+      const params = {
+        studentId,
+        titleId,
+        isRight,
+        complateTime,
+        answer
+      }
+      await complateTitleSql.changeTitleRecord(params)
+    } else {
+      // 不存在错题,新增错题
+      // 保存错题记录
+      const params = {
+        studentId,
+        titleId,
+        complateTime,
+        isRight,
+        answer,
+        trueAnswer
+      }
+      await complateTitleSql.addRecord(params)
+    }
+  } catch (e) {}
+}
+
+// 用于返回错误信息
+function errorMessFun (ctx, message, titleId, studentId, answer, trueAnswer) {
+  keepRecord(titleId, studentId, answer, trueAnswer, 0)
+  return (ctx.body = {
+    errormessage: message,
+    isRight: false,
+    error: 0
+  })
+}
+
+// 学生完成题目接口
+router.post('/completeTitle', async ctx => {
+  let token = ctx.request.header.authorization
+  let res_token = getToken(token)
+  const studentId = res_token.uniqueIdentifier // 从token中获取学生学号
+  const params = ctx.request.body
+  const titleId = params.titleId
+  let answer = params.answer.trim() // 学生提交答案
+  if (!titleId) {
+    return (ctx.body = {
+      message: '题目ID不能为空',
+      error: -1
+    })
+  }
+  if (!answer) {
+    return (ctx.body = {
+      message: '答案不能为空',
+      error: -1
+    })
+  }
+
+  const methodsFlag = answer.split(' ')[0]
+  let reTurnBody = null
+  let flag = true // 判断该题是否做对了
+  let performError = false // 判断是否执行报错
+  let title = await titleSql.queryInfoById(titleId) // 查询正确的答案
+  let trueAnswer = title[0].answer // 正确答案
+
+  let temStuList = [] // 用于存储学生sql语句的执行结果
+  let temTeaList = [] // 用于存储教师sql语句的执行结果
+
+  if (trueAnswer.split(' ')[0] !== methodsFlag) {
+    return errorMessFun(ctx, '答案错误,错误信息为：sql语句错误', titleId, studentId, answer, trueAnswer)
+  }
+  if (methodsFlag !== 'select') {
+    // 非查询操作
+
+    // 提取学生答案中涉及到的表名
+    const arr = answer.split(' ')
+    const tem = arr.filter(item => {
+      if (item.indexOf('_info') !== -1) {
+        return item
+      }
+    })
+    // 提取教师答案中涉及到的表名
+    const arrTea = trueAnswer.split(' ')
+    const temTea = arrTea.filter(item => {
+      if (item.indexOf('_info') !== -1) {
+        return item
+      }
+    })
+    // 比对提取到的两个表名
+    if (temTea.join(',') !== tem.join(',')) {
+      return errorMessFun(
+        ctx,
+        '答案错误, 错误信息为：sql语句错误',
+        titleId,
+        studentId,
+        answer,
+        trueAnswer
+      )
+    }
+    // 如果没有提取到表名，答案错误
+    if (!tem.length) {
+      return errorMessFun(
+        ctx,
+        '答案错误,错误信息为：sql语句错误',
+        titleId,
+        studentId,
+        answer,
+        trueAnswer
+      )
+    }
+
+    const hash = Math.random()
+      .toString(36)
+      .substr(2)
+    const hash2 = Math.random()
+      .toString(36)
+      .substr(2)
+
+    const tableName = tem[0] + hash // 生成执行学生结果的临时随机表
+    const tableNameTea = tem[0] + hash2 // 生成执行教师sql临时表
+
+    try {
+      await practiceSql.createTemTable(tableName, tem[0]) // 创建学生临时表
+      await practiceSql.createTemTable(tableNameTea, tem[0]) // 创建教师临时表
+
+      // 在学生临时表中执行学生sql语句
+      // 1、替换sql语句
+      let temAnswer = answer.replace(/\w+_info/g, () => {
+        return tableName
+      })
+      // 2、在临时表中执行sql语句
+      await practiceSql.perform(temAnswer)
+      // 3、查询学生临时表中的所有数据
+      temStuList = await practiceSql.queryDataTemTable(tableName)
+      // 在教师临时表执行正确的sql语句
+      // 1、替换sql语句
+      let temTrueAnswer = trueAnswer.replace(/\w+_info/g, () => {
+        return tableNameTea
+      })
+      // 2、在临时表中执行sql语句
+      await practiceSql.perform(temTrueAnswer)
+      // 3、查询教师临时表中的所有数据
+      temTeaList = await practiceSql.queryDataTemTable(tableNameTea)
+    } catch (e) {
+      // 记录错误的返回体信息，不能直接返回，需要将临时表清楚，并记录错误状态
+      performError = true
+      reTurnBody = errorMessFun(
+        ctx,
+        `答案错误,错误信息为：${e.toString()}`,
+        titleId,
+        studentId,
+        answer,
+        trueAnswer
+      )
+    } finally {
+      await practiceSql.deleteTemTable(tableName) // 删除临时表
+      await practiceSql.deleteTemTable(tableNameTea) // 删除教师临时表
+    }
+  } else {
+    // 查询操作
+
+    try {
+      // 执行学生sql语句
+      temStuList = await practiceSql.perform(answer)
+      // 执行教师sql语句
+      temTeaList = await practiceSql.perform(trueAnswer)
+    } catch (e) {
+      return errorMessFun(
+        ctx,
+        `答案错误,错误信息为：${e.toString()}`,
+        titleId,
+        studentId,
+        answer,
+        trueAnswer
+      )
+    }
+  }
+
+  if (performError) {
+    return reTurnBody
+  }
+  // 提交结果和正确结果不相同
+  if (JSON.stringify(temStuList) !== JSON.stringify(temTeaList)) {
+    flag = false
+  }
+  // 该题错误的返回结果
+  if (!flag) {
+    return errorMessFun(
+      ctx,
+      '答案错误,错误信息为：结果不一致',
+      titleId,
+      studentId,
+      answer,
+      trueAnswer
+    )
+  } else {
+    // 保存正确的做题记录
+    keepRecord(titleId, studentId, answer, trueAnswer, 1)
+    // 该题正确的返回结果
+    return (ctx.body = {
+      truemessage: '答案正确!',
+      isRight: true,
+      error: 0
+    })
+  }
+})
+
+// 学生完成试卷接口
+router.post('/completePaper', async ctx => {
+  let token = ctx.request.header.authorization
+  let res_token = getToken(token)
+  const studentId = res_token.uniqueIdentifier // 从token中获取学生学号
+  try{
+
+  }catch(e) {
+    
+  }
+})
+
 module.exports = router
