@@ -344,6 +344,43 @@ router.post('/completeTitle', async ctx => {
   }
 })
 
+// 学生获取试卷信息
+router.get('/getPaperInfo', async ctx => {
+  let token = ctx.request.header.authorization
+  let res_token = getToken(token)
+  const studentId = res_token.uniqueIdentifier // 从token中获取学生学号
+  const paperId = ctx.query.paperId;
+  if(!paperId) {
+    return ctx.body = {
+      message: '试卷ID不能为空',
+      error: -1
+    }
+  }
+  try{
+      const list = await paperSql.queryPaperDetailInfo(paperId)
+      if(!list.length) {
+        return ctx.body = {
+          message: '不存在该试卷',
+          error: -1
+        }
+      }
+      const objInfo = list[0];
+      objInfo.createTime = moment(objInfo.createTime).format('YYYY-MM-DD HH:mm:ss')
+      const titleTotalList = await titleSql.queryTitalTotal(paperId)
+      const titleTotal = titleTotalList[0]['count(*)']
+      objInfo.titleTotal = titleTotal;
+      return ctx.body = {
+        info: objInfo,
+        error: 0
+      }
+  }catch(e){
+    return ctx.body = {
+      message: e.toString(),
+      error: -2
+    }
+  }
+})
+
 // 学生完成试卷接口
 router.post('/completePaper', async ctx => {
   let token = ctx.request.header.authorization

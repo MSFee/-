@@ -34,6 +34,11 @@ let titleSql = {
      changeTitleInfo: function(parmas) {
         let _sql = `update title_info set titleName = '${parmas.titleName}', answer = '${parmas.answer}' where titleId = ${parmas.titleId};`;
         return allServices.query(_sql);
+     },
+     // 根据ID查询属于该试卷的题目数量
+     queryTitalTotal: function(paperId) {
+        let _sql = `select count(*) from title_info where paperId = ${paperId}`
+        return allServices.query(_sql);
      }
 }
 module.exports = titleSql;
