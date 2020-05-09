@@ -13,6 +13,8 @@ const userSql = require('../allSqlStatement/userSql')
 const paperSql = require('../allSqlStatement/paperSql')
 const titleSql = require('../allSqlStatement/titleSql')
 const practiceSql = require('../allSqlStatement/practiceSql')
+const complateTitleSql = require('../allSqlStatement/complateTitleSql')
+
 let transporter = nodemailer.createTransport({
   service: 'qq',
   auth: {
@@ -191,17 +193,28 @@ router.get('/getAllTitle', async ctx => {
 })
 
 // 用于返回错误信息
-function errorMessFun (ctx, message) {
-  return (ctx.body = {
-    errormessage: message,
-    score: 0,
-    isRight: false,
-    error: 0
-  })
+function errorMessFun (ctx, message, studentId, answer, trueAnswer) {
+
+  try{
+    // 保存错题记录
+
+  }catch(e){
+
+  }finally{
+    return (ctx.body = {
+      errormessage: message,
+      score: 0,
+      isRight: false,
+      error: 0
+    })
+  }
 }
 
 // 学生完成题目接口
 router.post('/completeTitle', async ctx => {
+  let token = ctx.request.header.authorization
+  let res_token = getToken(token)
+  const studentId = res_token.uniqueIdentifier // 从token中获取学生学号
   const params = ctx.request.body
   const titleId = params.titleId
   let answer = params.answer.trim() // 学生提交答案
@@ -229,7 +242,7 @@ router.post('/completeTitle', async ctx => {
   let temTeaList = [] // 用于存储教师sql语句的执行结果
 
   if (trueAnswer.split(' ')[0] !== methodsFlag) {
-    return  errorMessFun(ctx, '答案错误')
+    return  errorMessFun(ctx, '答案错误', studentId, answer, trueAnswer)
   }
   if (methodsFlag !== 'select') {
     // 非查询操作
@@ -250,11 +263,11 @@ router.post('/completeTitle', async ctx => {
     })
     // 比对提取到的两个表名
     if (temTea.join(',') !== tem.join(',')) {
-      return errorMessFun(ctx, '答案错误')
+      return errorMessFun(ctx, '答案错误', studentId, answer, trueAnswer)
     }
     // 如果没有提取到表名，答案错误
     if (!tem.length) {
-      return errorMessFun(ctx, '答案错误')
+      return errorMessFun(ctx, '答案错误', studentId, answer, trueAnswer)
     }
 
     const hash = Math.random()
@@ -292,7 +305,7 @@ router.post('/completeTitle', async ctx => {
     } catch (e) {
       // 记录错误的返回体信息，不能直接返回，需要将临时表清楚，并记录错误状态
       performError = true;
-      reTurnBody = errorMessFun(ctx, `答案错误,错误信息为：${e.toString()}`)
+      reTurnBody = errorMessFun(ctx, `答案错误,错误信息为：${e.toString()}`, studentId, answer, trueAnswer)
     } finally {
       await practiceSql.deleteTemTable(tableName) // 删除临时表
       await practiceSql.deleteTemTable(tableNameTea) // 删除教师临时表
@@ -306,7 +319,7 @@ router.post('/completeTitle', async ctx => {
       // 执行教师sql语句
       temTeaList = await practiceSql.perform(trueAnswer)
     } catch (e) {
-       return errorMessFun(ctx, `答案错误,错误信息为：${e.toString()}`)
+       return errorMessFun(ctx, `答案错误,错误信息为：${e.toString()}`, studentId, answer, trueAnswer)
     }
   }
 
@@ -319,7 +332,7 @@ router.post('/completeTitle', async ctx => {
   }
   // 该题错误的返回结果
   if (!flag) {
-    return errorMessFun(ctx, '答案错误!')
+    return errorMessFun(ctx, '答案错误!', studentId, answer, trueAnswer)
   } else {
     // 该题正确的返回结果
     return (ctx.body = {

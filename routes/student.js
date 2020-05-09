@@ -91,16 +91,21 @@ router.get('/getPaperList', async ctx => {
       size,
       sorting
     )
-    const map = new Map()
+    const userNameMap = new Map()
+    const schoolMap = new Map();
     for (let i = 0; i < list.length; i++) {
       const workNumber = list[i].workNumber
-      if (map.has(workNumber)) {
-        list[i].userName = map.get(workNumber)
+      if (userNameMap.has(workNumber)) {
+        list[i].userName = userNameMap.get(workNumber)
+        list[i].school = schoolMap.get(workNumber);
       } else {
         const userNameList = await userSql.queryNameByWorkNumber(workNumber)
         const userName = userNameList[0].userName
+        const school = userNameList[0].school
         list[i].userName = userName
-        map.set(workNumber, userName)
+        list[i].school = school
+        userNameMap.set(workNumber, userName)
+        schoolMap.set(workNumber, school);
       }
       list[i].createTime = moment(list[i].createTime).format(
         'YYYY-MM-DD HH:mm:ss'

@@ -54,7 +54,7 @@ let userSql = {
  },
  // 根据工号查询教师名称
  queryNameByWorkNumber: function(workNumber) {
-   let _sql = `select userName from teacher_info where workNumber = ${workNumber}`;
+   let _sql = `select userName, school from teacher_info where workNumber = ${workNumber}`;
    return allServices.query(_sql);
  },
   // 通过学校查询教师工号
