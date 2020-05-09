@@ -395,4 +395,31 @@ router.post('/completePaper', async ctx => {
   }
 })
 
+// 学生获取试卷下所有的题目ID信息
+router.get('/getAllTitleID', async ctx => {
+   const paperId = ctx.query.paperId;
+   if(!paperId) {
+     return ctx.body ={
+       message: '试卷ID不能为空',
+       error: -1
+     }
+   }
+   try{
+     const list = await titleSql.queryAllTitleByPaperId(paperId);
+     const arr = []
+     list.map(item => {
+       arr.push(item.titleId);  
+     })
+     return ctx.body = {
+       titleList: arr,
+       error: 0
+     }
+   }catch(e){
+     return ctx.body = {
+       message: e.toString(),
+       error: -2
+     }
+   }
+})
+
 module.exports = router
