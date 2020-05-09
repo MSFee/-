@@ -422,4 +422,20 @@ router.get('/getAllTitleID', async ctx => {
    }
 })
 
+// 学生获取某一个题目信息
+router.get('/getTitleInfo', async ctx => {
+  const titleId = ctx.query.titleId
+  try{
+    const obj = await titleSql.queryInfoById(titleId);
+    return ctx.body = {
+      info: obj,
+      error: 0
+    }
+  }catch(e){
+    return ctx.body = {
+      message: e.toString(),
+      error: -2
+    }
+  }
+})
 module.exports = router
