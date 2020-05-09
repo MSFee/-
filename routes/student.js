@@ -428,7 +428,7 @@ router.get('/getTitleInfo', async ctx => {
   try{
     const obj = await titleSql.queryInfoById(titleId);
     return ctx.body = {
-      info: obj,
+      info: obj[0],
       error: 0
     }
   }catch(e){
