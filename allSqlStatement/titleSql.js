@@ -17,7 +17,7 @@ let titleSql = {
     },
     // 根据试卷ID查询属于该试卷下的所有题目
     queryAllTitleByPaperId: function(paperId){
-        let _sql = `select titleId, titleName, answer, createTime, count, maxScore from title_info where paperId = ${paperId}`;
+        let _sql = `select titleId, titleName, answer, createTime, count, maxScore from title_info where paperId = ${paperId} order by titleId asc`;
         return allServices.query(_sql);
     },
     // 根据题目ID查询题目信息
@@ -39,6 +39,6 @@ let titleSql = {
      queryTitalTotal: function(paperId) {
         let _sql = `select count(*) from title_info where paperId = ${paperId}`
         return allServices.query(_sql);
-     }
+     },
 }
 module.exports = titleSql;

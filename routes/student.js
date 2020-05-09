@@ -369,6 +369,8 @@ router.get('/getPaperInfo', async ctx => {
       const titleTotalList = await titleSql.queryTitalTotal(paperId)
       const titleTotal = titleTotalList[0]['count(*)']
       objInfo.titleTotal = titleTotal;
+      const titleList = await titleSql.queryAllTitleByPaperId(paperId);
+      objInfo.firstTitleId = titleList[0].titleId;
       return ctx.body = {
         info: objInfo,
         error: 0
