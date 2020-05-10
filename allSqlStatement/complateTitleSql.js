@@ -36,7 +36,8 @@ let complateTitleSql = {
   },
   // 根据试卷ID查询和学号查询出某个学生已经该完成的题目
   getTitleListByPaperId: function(studentId, paperId) {
-    let _sql = ``
+    let _sql = `select titleId from completeTitle_info where studentId = ${studentId} and paperId = ${paperId} order by titleId asc`
+    return allServices.query(_sql)
   }
 }
 module.exports = complateTitleSql

@@ -412,7 +412,10 @@ router.post('/completePaper', async ctx => {
 
 // 学生获取试卷下所有的题目ID信息
 router.get('/getAllTitleID', async ctx => {
-   const paperId = ctx.query.paperId;
+  let token = ctx.request.header.authorization
+  let res_token = getToken(token)
+  const studentId = res_token.uniqueIdentifier // 从token中获取学生学号
+  const paperId = ctx.query.paperId;
    if(!paperId) {
      return ctx.body ={
        message: '试卷ID不能为空',
@@ -420,10 +423,26 @@ router.get('/getAllTitleID', async ctx => {
      }
    }
    try{
-     const list = await titleSql.queryAllTitleByPaperId(paperId);
-     const arr = []
+     const list = await titleSql.queryAllTitleByPaperId(paperId) // 长数组
+     const list2 = await complateTitleSql.getTitleListByPaperId(studentId, paperId) // 短数组
+     let arr = [];
+     const arr2 = [];
      list.map(item => {
-       arr.push(item.titleId);  
+       arr.push(item.titleId);
+     })
+     list2.map(item => {
+       arr2.push(item.titleId);
+     })
+     for(let i = 0; i < arr2.length; i++) {
+       const index = arr.indexOf(arr2[i]);
+       list[index].isComplate = 1;
+     }
+     arr = []
+     list.map(item => {
+       arr.push({
+         titleId: item.titleId,
+         isComplate: item.isComplate ? 1 : 0,
+       })
      })
      return ctx.body = {
        titleList: arr,
