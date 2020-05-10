@@ -547,4 +547,8 @@ router.get('/getTitleStatus', async ctx => {
     }
   }
 })
+// 学生提交试卷接口
+router.post('/submitPaper', async ctx => {
+  
+})
 module.exports = router
