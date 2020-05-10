@@ -65,6 +65,11 @@ let parperSql = {
     let _sql1 = `delete from paper_info where paperId = ${paperId};`
     let _sql2 = `delete from title_info where paperId = ${paperId};`
     return allServices.transaction([_sql1, _sql2])
+  },
+  // 试卷完成次数加1
+  addPaperCount: function(paperId) {
+    let _sql = `update paper_info set count = count + 1 where paperId = ${paperId}`
+    return allServices.query(_sql)
   }
 }
 module.exports = parperSql

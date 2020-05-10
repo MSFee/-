@@ -576,6 +576,7 @@ router.post('/submitPaper', async ctx => {
       score: list[0].total
     }
     await complatePaperSql.addRecord(params)
+    await paperSql.addPaperCount(paperId)
     return ctx.body = {
       message: '试卷完成成功',
       error:0
