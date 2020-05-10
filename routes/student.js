@@ -14,6 +14,7 @@ const paperSql = require('../allSqlStatement/paperSql')
 const titleSql = require('../allSqlStatement/titleSql')
 const practiceSql = require('../allSqlStatement/practiceSql')
 const complateTitleSql = require('../allSqlStatement/complateTitleSql')
+const complatePaperSql = require('../allSqlStatement/complatePaperSql')
 router.prefix('/student')
 
 // 学生查看所有的试卷
@@ -554,6 +555,35 @@ router.get('/getTitleStatus', async ctx => {
 })
 // 学生提交试卷接口
 router.post('/submitPaper', async ctx => {
-  
+  let token = ctx.request.header.authorization
+  let res_token = getToken(token)
+  const studentId = res_token.uniqueIdentifier // 从token中获取学生学号
+  const paperId = ctx.request.body.paperId;
+  if(!paperId) {
+    return ctx.body = {
+      message: '试卷ID不能为空',
+      error: -1
+    }
+  }
+  try{
+    const complateTime = moment(new Date()).format('YYYY-MM-DD HH:mm:ss')
+    const list = await complateTitleSql.getTotalScore(paperId, studentId)
+    const params = {
+      studentId,
+      paperId,
+      complateTime,
+      score: list[0].total
+    }
+    await complatePaperSql.addRecord(params)
+    return ctx.body = {
+      message: '试卷完成成功',
+      error:0
+    }
+  }catch(e) {
+    return ctx.body = {
+      message: e.toString(),
+      error: -2
+    }
+  }
 })
 module.exports = router

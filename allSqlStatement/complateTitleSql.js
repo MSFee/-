@@ -40,6 +40,11 @@ let complateTitleSql = {
   getTitleListByPaperId: function(studentId, paperId) {
     let _sql = `select titleId from completeTitle_info where studentId = ${studentId} and paperId = ${paperId} order by titleId asc`
     return allServices.query(_sql)
+  },
+  // 统计学生完成题目的分数总和
+  getTotalScore: function(paperId, studentId) {
+    let _sql = `select sum(score) as total from completeTitle_info where studentId = ${studentId} and paperId = ${paperId}`
+    return allServices.query(_sql)
   }
 }
 module.exports = complateTitleSql
