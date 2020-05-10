@@ -466,7 +466,7 @@ router.get('/getAllTitleID', async ctx => {
      const list = await titleSql.queryAllTitleByPaperId(paperId) // 长数组
      const list2 = await complateTitleSql.getTitleListByPaperId(studentId, paperId) // 短数组
      let arr = [];
-     const arr2 = [];
+     let arr2 = [];
      list.map(item => {
        arr.push(item.titleId);
      })
@@ -475,6 +475,7 @@ router.get('/getAllTitleID', async ctx => {
      })
      for(let i = 0; i < arr2.length; i++) {
        const index = arr.indexOf(arr2[i]);
+       console.log(index)
        list[index].isComplate = 1;
      }
      arr = []
@@ -580,6 +581,39 @@ router.post('/submitPaper', async ctx => {
       error:0
     }
   }catch(e) {
+    return ctx.body = {
+      message: e.toString(),
+      error: -2
+    }
+  }
+})
+
+// 学生查询某一张试卷是否已经完成
+router.get('/paperBeenCompleted', async ctx => {
+  let token = ctx.request.header.authorization
+  let res_token = getToken(token)
+  const studentId = res_token.uniqueIdentifier // 从token中获取学生学号
+  const paperId = ctx.query.paperId;
+  if(!paperId) {
+    return ctx.body = {
+      message: '试卷ID不能为空',
+      error: -1
+    }
+  }
+  try{
+    const list = await complatePaperSql.queryPaperList(studentId, paperId)
+    if(list.length) {
+      return ctx.body = {
+        isComplate: true,
+        error: 0
+      }
+    }else {
+      return ctx.body = {
+        isComplate: false,
+        error: 0
+      }
+    }
+  }catch(e){
     return ctx.body = {
       message: e.toString(),
       error: -2

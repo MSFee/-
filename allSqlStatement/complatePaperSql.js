@@ -12,6 +12,11 @@ let complatePaperSql = {
             ${parmas.score}
         )`
         return allServices.query(_sql)
+    },
+    // 根据学生ID和试卷ID查询
+    queryPaperList: function(studentId, paperId) {
+        let _sql = `select * from complatePaper_info where studentId = ${studentId} and paperId = ${paperId}`
+        return allServices.query(_sql)
     }
 }
 
