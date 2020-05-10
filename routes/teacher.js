@@ -12,6 +12,7 @@ const userSql = require('../allSqlStatement/userSql')
 const paperSql = require('../allSqlStatement/paperSql')
 const titleSql = require('../allSqlStatement/titleSql')
 const practiceSql = require('../allSqlStatement/practiceSql');
+const complatePaperSql = require('../allSqlStatement/complatePaperSql')
 
 router.prefix('/teacher');
 
@@ -146,6 +147,16 @@ router.put('/publishPaper', async ctx => {
         }
     }
     try{
+        if(issued === 0) {
+          // 判断是否可以撤销发布
+          const list = await complatePaperSql.queryPaperHaveCompalte(paperId)
+          if(list.length) {
+            return ctx.body = {
+              message: '该试卷已有学生完成，无法撤销发布',
+              error: 0
+            }
+          }
+        }
         await paperSql.publishPaper(paperId, issued);
         return ctx.body = {
             message: issued ? '试卷发布成功' : "试卷撤销发布成功",
