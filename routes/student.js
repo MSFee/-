@@ -413,14 +413,16 @@ router.post('/completePaper', async ctx => {
   try{
     const complateTitleList = await complateTitleSql.getTitleListByPaperId(studentId, paperId)
     const titleList = await titleSql.queryAllTitleByPaperId(paperId)
-    const arr = [];
-    const arr2 = [];
+    let arr = [];
+    let arr2 = [];
     complateTitleList.map(item => {
       arr.push(item.titleId)
     })
     titleList.map(item => {
       arr2.push(item.titleId)
     })
+    arr.sort((a, b) => a - b);
+    arr2.sort((a, b) => a - b);
     let str1 = arr.join(',');
     let str2 = arr2.join(',');
     if(str1 === str2) {
