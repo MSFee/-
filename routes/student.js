@@ -21,7 +21,7 @@ router.prefix('/student')
 router.get('/getPaperList', async ctx => {
   const params = ctx.query
   const page = params.page || 1
-  const size = params.size || 5
+  const size = params.size || 10
   const sorting = {}
   sorting.accordHeat = params.accordHeat // 按热度排序
   sorting.accordTime = params.accordTime // 按时间排序
