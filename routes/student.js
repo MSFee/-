@@ -398,15 +398,49 @@ router.get('/getPaperInfo', async ctx => {
   }
 })
 
-// 学生完成试卷接口
+// 学生能否交卷接口
 router.post('/completePaper', async ctx => {
   let token = ctx.request.header.authorization
   let res_token = getToken(token)
   const studentId = res_token.uniqueIdentifier // 从token中获取学生学号
+  const paperId = ctx.request.body.paperId;
+  if(!paperId) {
+    return ctx.body = {
+      message: '试卷ID不能为空',
+      error: -1
+    }
+  }
   try{
-
+    const complateTitleList = await complateTitleSql.getTitleListByPaperId(studentId, paperId)
+    const titleList = await titleSql.queryAllTitleByPaperId(paperId)
+    const arr = [];
+    const arr2 = [];
+    complateTitleList.map(item => {
+      arr.push(item.titleId)
+    })
+    titleList.map(item => {
+      arr2.push(item.titleId)
+    })
+    let str1 = arr.join(',');
+    let str2 = arr2.join(',');
+    if(str1 === str2) {
+      return ctx.body = {
+        message: '您已完成试卷所有题目',
+        canSubmit: true,
+        error: 0
+      }
+    }else {
+      return ctx.body = {
+        message: '您还有题目尚未完成，无法交卷',
+        canSubmit: false,
+        error: 0
+      }
+    }
   }catch(e) {
-    
+    return ctx.body = {
+      message: e.toString(),
+      error: -2
+    }
   }
 })
 
