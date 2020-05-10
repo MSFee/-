@@ -6,14 +6,15 @@ let complateTitleSql = {
   addRecord: function (params) {
     let _sql = `insert into completeTitle_info (
             titleId, studentId, complateTime, 
-            isRight, submitAnswer, trueAnswer, paperId) values (
+            isRight, submitAnswer, trueAnswer, paperId, score) values (
                 ${params.titleId},
                 ${params.studentId},
                 '${params.complateTime}',
                 ${params.isRight},
                 '${params.answer}',
                 '${params.trueAnswer}',
-                ${params.paperId}
+                ${params.paperId},
+                ${params.score}
             )`
     return allServices.query(_sql)
   },
@@ -25,7 +26,8 @@ let complateTitleSql = {
   // 修改错题
   changeTitleRecord: function(params) {
       let _sql = `update completeTitle_info set 
-      isRight = ${params.isRight}, submitAnswer = '${params.answer}', complateTime = '${params.complateTime}'
+      isRight = ${params.isRight}, submitAnswer = '${params.answer}', 
+      complateTime = '${params.complateTime}', score = ${params.score}
       where titleId = ${params.titleId} and studentId = ${params.studentId}`
       return allServices.query(_sql);
   },

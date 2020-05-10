@@ -87,6 +87,24 @@ router.post('/createTitle', async ctx => {
         error: -1
       })
     }
+    if(!parmas.score) {
+      return ctx.body = {
+        message: '分数不能为空',
+        error: -1
+      }
+    }
+    if(typeof Number(parmas.score) !== 'number') {
+      return ctx.body = {
+        message: '分数不合法',
+        error: -1
+      }
+    }
+    if(Number(parmas.score) >= 100 || Number(parmas.score) <= 0) {
+      return ctx.body = {
+        message: '分数大小不合法',
+        error: -1
+      }
+    }
     try {
       const isPaperId = await paperSql.queryPaperInfo(parmas.paperId)
       if (!isPaperId.length) {

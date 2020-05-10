@@ -138,6 +138,8 @@ async function keepRecord (paperId, titleId, studentId, answer, trueAnswer, isRi
   const complateTime = moment(new Date()).format('YYYY-MM-DD HH:mm:ss')
   try {
     // 根据学生ID和题目ID查询学生是否做过该题，如果做过则修改错题记录，如果没有则新增错题记录
+    const list = await titleSql.queryInfoDetailById(titleId);
+    const score = list[0].score;
     const errorList = await complateTitleSql.queryScordByID(titleId, studentId)
     if (errorList.length) {
       // 已经存在错题了
@@ -147,6 +149,7 @@ async function keepRecord (paperId, titleId, studentId, answer, trueAnswer, isRi
         isRight,
         complateTime,
         answer,
+        score: isRight ? score : 0,
       }
       await complateTitleSql.changeTitleRecord(params)
     } else {
@@ -159,8 +162,8 @@ async function keepRecord (paperId, titleId, studentId, answer, trueAnswer, isRi
         isRight,
         answer,
         trueAnswer,
-        paperId
-
+        paperId,
+        score: isRight ? score : 0,
       }
       await complateTitleSql.addRecord(params)
     }
@@ -424,7 +427,7 @@ router.post('/completePaper', async ctx => {
     arr.sort((a, b) => a - b);
     arr2.sort((a, b) => a - b);
     let str1 = arr.join(',');
-    let str2 = arr2.join(','); // sd
+    let str2 = arr2.join(','); 
     if(str1 === str2) {
       return ctx.body = {
         message: '您已完成试卷所有题目',

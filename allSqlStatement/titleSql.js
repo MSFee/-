@@ -4,20 +4,21 @@ const allServices = require('./index')
 let titleSql = {
     // 新增一道题目
     addtitle: function(parmas) {
-        let _sql = `insert into title_info (titleName, answer, paperId, count, createTime)
+        let _sql = `insert into title_info (titleName, answer, paperId, count, createTime, score)
         Values (
             '${parmas.titleName}',
             '${parmas.answer}',
             ${parmas.paperId},
             0,
-            '${parmas.createTime}'
+            '${parmas.createTime}',
+            ${parmas.score}
         )
         `;
         return allServices.query(_sql);
     },
     // 根据试卷ID查询属于该试卷下的所有题目
     queryAllTitleByPaperId: function(paperId){
-        let _sql = `select titleId, titleName, answer, createTime, count, maxScore from title_info where paperId = ${paperId} order by titleId desc`;
+        let _sql = `select titleId, titleName, answer, createTime, count, score from title_info where paperId = ${paperId} order by titleId desc`;
         return allServices.query(_sql);
     },
     // 根据题目ID查询题目信息
@@ -27,7 +28,7 @@ let titleSql = {
     },
     // 根据题目ID查询题目部分
     queryInfoDetailById: function(titleId) {
-        let _sql = `select titleId, titleName, paperId from title_info where titleId = ${titleId};`;
+        let _sql = `select titleId, titleName, paperId, score from title_info where titleId = ${titleId};`;
         return allServices.query(_sql);
     },
      // 删除题目
