@@ -17,6 +17,11 @@ let complatePaperSql = {
     queryPaperList: function(studentId, paperId) {
         let _sql = `select * from complatePaper_info where studentId = ${studentId} and paperId = ${paperId}`
         return allServices.query(_sql)
+    },
+    // 查询某一张试卷的最高分
+    queryMaxScore: function(paperId) {
+        let _sql = `select max(score) as maxScore from complatePaper_info where paperId = ${paperId}`
+        return allServices.query(_sql)
     }
 }
 

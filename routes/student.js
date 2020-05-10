@@ -390,6 +390,10 @@ router.get('/getPaperInfo', async ctx => {
       objInfo.titleTotal = titleTotal;
       const titleList = await titleSql.queryAllTitleByPaperId(paperId);
       objInfo.firstTitleId = titleList[0].titleId;
+      const maxScoreList = await complatePaperSql.queryMaxScore(paperId)
+      if(maxScoreList.length) {
+         objInfo.maxScore = maxScoreList[0].maxScore
+      }
       return ctx.body = {
         info: objInfo,
         error: 0
