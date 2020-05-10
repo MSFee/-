@@ -6,13 +6,14 @@ let complateTitleSql = {
   addRecord: function (params) {
     let _sql = `insert into completeTitle_info (
             titleId, studentId, complateTime, 
-            isRight, submitAnswer, trueAnswer) values (
+            isRight, submitAnswer, trueAnswer, paperId) values (
                 ${params.titleId},
                 ${params.studentId},
                 '${params.complateTime}',
                 ${params.isRight},
                 '${params.answer}',
-                '${params.trueAnswer}'
+                '${params.trueAnswer}',
+                ${params.paperId}
             )`
     return allServices.query(_sql)
   },
@@ -32,6 +33,10 @@ let complateTitleSql = {
   getTitleStatus: function(studentId, titleId) {
     let _sql = `select isRight, submitAnswer from completeTitle_info where studentId = ${studentId} and titleId = ${titleId}`
     return allServices.query(_sql);
+  },
+  // 根据试卷ID查询和学号查询出某个学生已经该完成的题目
+  getTitleListByPaperId: function(studentId, paperId) {
+    let _sql = ``
   }
 }
 module.exports = complateTitleSql

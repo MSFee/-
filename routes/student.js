@@ -132,7 +132,7 @@ router.get('/getPaperList', async ctx => {
 })
 
 // 保存学生的做题记录
-async function keepRecord (titleId, studentId, answer, trueAnswer, isRight) {
+async function keepRecord (paperId, titleId, studentId, answer, trueAnswer, isRight) {
   answer = answer.replace(/\'/g, '"')
   trueAnswer = trueAnswer.replace(/\'/g, '"')
   const complateTime = moment(new Date()).format('YYYY-MM-DD HH:mm:ss')
@@ -146,7 +146,7 @@ async function keepRecord (titleId, studentId, answer, trueAnswer, isRight) {
         titleId,
         isRight,
         complateTime,
-        answer
+        answer,
       }
       await complateTitleSql.changeTitleRecord(params)
     } else {
@@ -158,7 +158,9 @@ async function keepRecord (titleId, studentId, answer, trueAnswer, isRight) {
         complateTime,
         isRight,
         answer,
-        trueAnswer
+        trueAnswer,
+        paperId
+
       }
       await complateTitleSql.addRecord(params)
     }
@@ -167,8 +169,8 @@ async function keepRecord (titleId, studentId, answer, trueAnswer, isRight) {
 }
 
 // 用于返回错误信息
-function errorMessFun (ctx, message, titleId, studentId, answer, trueAnswer) {
-  keepRecord(titleId, studentId, answer, trueAnswer, 0)
+function errorMessFun (paperId, ctx, message, titleId, studentId, answer, trueAnswer) {
+  keepRecord(paperId, titleId, studentId, answer, trueAnswer, 0)
   return (ctx.body = {
     errormessage: message,
     isRight: false,
@@ -183,6 +185,7 @@ router.post('/completeTitle', async ctx => {
   const studentId = res_token.uniqueIdentifier // 从token中获取学生学号
   const params = ctx.request.body
   const titleId = Number(params.titleId)
+  const paperId = Number(params.paperId)
   let answer = params.answer.trim() // 学生提交答案
   if (!titleId) {
     return (ctx.body = {
@@ -196,7 +199,12 @@ router.post('/completeTitle', async ctx => {
       error: -1
     })
   }
-
+  if(!paperId) {
+    return ctx.body = {
+      message: '试卷ID不能为空',
+      error: -1
+    }
+  }
   const methodsFlag = answer.split(' ')[0]
   let reTurnBody = null
   let flag = true // 判断该题是否做对了
@@ -208,7 +216,7 @@ router.post('/completeTitle', async ctx => {
   let temTeaList = [] // 用于存储教师sql语句的执行结果
 
   if (trueAnswer.split(' ')[0] !== methodsFlag) {
-    return errorMessFun(ctx, '答案错误,错误信息为：sql语句错误', titleId, studentId, answer, trueAnswer)
+    return errorMessFun(paperId, ctx, '答案错误,错误信息为：sql语句错误', titleId, studentId, answer, trueAnswer)
   }
   if (methodsFlag !== 'select') {
     // 非查询操作
@@ -230,6 +238,7 @@ router.post('/completeTitle', async ctx => {
     // 比对提取到的两个表名
     if (temTea.join(',') !== tem.join(',')) {
       return errorMessFun(
+        paperId, 
         ctx,
         '答案错误, 错误信息为：sql语句错误',
         titleId,
@@ -241,6 +250,7 @@ router.post('/completeTitle', async ctx => {
     // 如果没有提取到表名，答案错误
     if (!tem.length) {
       return errorMessFun(
+        paperId, 
         ctx,
         '答案错误,错误信息为：sql语句错误',
         titleId,
@@ -286,6 +296,7 @@ router.post('/completeTitle', async ctx => {
       // 记录错误的返回体信息，不能直接返回，需要将临时表清楚，并记录错误状态
       performError = true
       reTurnBody = errorMessFun(
+        paperId, 
         ctx,
         `答案错误,错误信息为：${e.toString()}`,
         titleId,
@@ -307,6 +318,7 @@ router.post('/completeTitle', async ctx => {
       temTeaList = await practiceSql.perform(trueAnswer)
     } catch (e) {
       return errorMessFun(
+        paperId, 
         ctx,
         `答案错误,错误信息为：${e.toString()}`,
         titleId,
@@ -327,6 +339,7 @@ router.post('/completeTitle', async ctx => {
   // 该题错误的返回结果
   if (!flag) {
     return errorMessFun(
+      paperId, 
       ctx,
       '答案错误,错误信息为：结果不一致',
       titleId,
@@ -336,7 +349,7 @@ router.post('/completeTitle', async ctx => {
     )
   } else {
     // 保存正确的做题记录
-    keepRecord(titleId, studentId, answer, trueAnswer, 1)
+    keepRecord(paperId, titleId, studentId, answer, trueAnswer, 1)
     // 该题正确的返回结果
     return (ctx.body = {
       truemessage: '答案正确!',
