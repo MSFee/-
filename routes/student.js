@@ -438,11 +438,14 @@ router.get('/getAllTitleID', async ctx => {
        list[index].isComplate = 1;
      }
      arr = []
+     let index = 1;
      list.map(item => {
        arr.push({
          titleId: item.titleId,
          isComplate: item.isComplate ? 1 : 0,
+         index,
        })
+       index ++
      })
      return ctx.body = {
        titleList: arr,
