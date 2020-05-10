@@ -444,4 +444,38 @@ router.get('/getTitleInfo', async ctx => {
     }
   }
 })
+// 学生查询某一个题是否已经完成
+router.get('/getTitleStatus', async ctx => {
+  let token = ctx.request.header.authorization
+  let res_token = getToken(token)
+  const studentId = res_token.uniqueIdentifier // 从token中获取学生学号
+  const titleId = ctx.query.titleId;
+  if(!titleId) {
+    return ctx.body = {
+      message: '题目ID不能为空',
+      error: -1
+    }
+  }
+  try{
+    const list = await complateTitleSql.getTitleStatus(studentId, titleId);
+    if(list.length) {
+      return ctx.body = {
+        isRight: list[0].isRight,
+        submitAnswer: list[0].submitAnswer,
+        isComplate: 1,
+        error: 0
+      }
+    }else {
+      return ctx.body = {
+        isComplate: 0,
+        error: 0
+      }
+    }
+  }catch(e) {
+    return ctx.body = {
+      message: e.toString(),
+      error: -2
+    }
+  }
+})
 module.exports = router

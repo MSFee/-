@@ -27,6 +27,11 @@ let complateTitleSql = {
       isRight = ${params.isRight}, submitAnswer = '${params.answer}', complateTime = '${params.complateTime}'
       where titleId = ${params.titleId} and studentId = ${params.studentId}`
       return allServices.query(_sql);
+  },
+  // 根据学号和题目Id查询题目是否已经完成
+  getTitleStatus: function(studentId, titleId) {
+    let _sql = `select isRight, submitAnswer from completeTitle_info where studentId = ${studentId} and titleId = ${titleId}`
+    return allServices.query(_sql);
   }
 }
 module.exports = complateTitleSql
