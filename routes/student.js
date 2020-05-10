@@ -424,7 +424,7 @@ router.post('/completePaper', async ctx => {
     arr.sort((a, b) => a - b);
     arr2.sort((a, b) => a - b);
     let str1 = arr.join(',');
-    let str2 = arr2.join(',');
+    let str2 = arr2.join(','); // sd
     if(str1 === str2) {
       return ctx.body = {
         message: '您已完成试卷所有题目',
