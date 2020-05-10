@@ -13,7 +13,6 @@ const userSql = require('../allSqlStatement/userSql')
 const paperSql = require('../allSqlStatement/paperSql')
 const titleSql = require('../allSqlStatement/titleSql')
 const practiceSql = require('../allSqlStatement/practiceSql')
-const complateTitleSql = require('../allSqlStatement/complateTitleSql')
 
 let transporter = nodemailer.createTransport({
   service: 'qq',

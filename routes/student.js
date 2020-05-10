@@ -13,6 +13,7 @@ const userSql = require('../allSqlStatement/userSql')
 const paperSql = require('../allSqlStatement/paperSql')
 const titleSql = require('../allSqlStatement/titleSql')
 const practiceSql = require('../allSqlStatement/practiceSql')
+const complateTitleSql = require('../allSqlStatement/complateTitleSql')
 router.prefix('/student')
 
 // 学生查看所有的试卷
@@ -161,7 +162,8 @@ async function keepRecord (titleId, studentId, answer, trueAnswer, isRight) {
       }
       await complateTitleSql.addRecord(params)
     }
-  } catch (e) {}
+  } catch (e) {
+  }
 }
 
 // 用于返回错误信息
@@ -180,7 +182,7 @@ router.post('/completeTitle', async ctx => {
   let res_token = getToken(token)
   const studentId = res_token.uniqueIdentifier // 从token中获取学生学号
   const params = ctx.request.body
-  const titleId = params.titleId
+  const titleId = Number(params.titleId)
   let answer = params.answer.trim() // 学生提交答案
   if (!titleId) {
     return (ctx.body = {
