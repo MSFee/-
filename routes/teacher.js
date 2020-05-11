@@ -145,9 +145,17 @@ router.put('/publishPaper', async ctx => {
     })
   }
   try {
+    const titleList = await titleSql.queryAllTitleByPaperId(paperId)
+    if(!titleList.length) {
+      return ctx.body = {
+        message: '不能发布空试卷',
+        error: 0
+      }
+    }
     await paperSql.publishPaper(paperId, issued)
     return (ctx.body = {
       message: issued ? '试卷发布成功' : '试卷撤销发布成功',
+      canPublic: true,
       error: 0
     })
   } catch (e) {
@@ -158,6 +166,7 @@ router.put('/publishPaper', async ctx => {
   }
 })
 
+// 判断某一张试卷是否可以撤销发布
 router.get('/queryPaperHaveCompalte', async ctx => {
   const paperId = ctx.query.paperId
   try {
