@@ -145,17 +145,9 @@ router.put('/publishPaper', async ctx => {
     })
   }
   try {
-    const titleList = await titleSql.queryAllTitleByPaperId(paperId)
-    if(!titleList.length) {
-      return ctx.body = {
-        message: '不能发布空试卷',
-        error: 0
-      }
-    }
     await paperSql.publishPaper(paperId, issued)
     return (ctx.body = {
       message: issued ? '试卷发布成功' : '试卷撤销发布成功',
-      canPublic: true,
       error: 0
     })
   } catch (e) {
@@ -163,6 +155,36 @@ router.put('/publishPaper', async ctx => {
       message: e.toString(),
       error: -2
     })
+  }
+})
+
+// 判断一张试卷是否可以发布
+router.get('/queryPaperCanPublic', async ctx => {
+  const paperId = ctx.query.paperId
+  if(!paperId) {
+    return ctx.body = {
+      message: '试卷ID不能为空',
+      error: -1
+    }
+  }
+  try{
+    const titleList = await titleSql.queryAllTitleByPaperId(paperId)
+    if(!titleList.length) {
+      return ctx.body = {
+        canPublic: false,
+        error: 0
+      }
+    }else {
+      return ctx.body = {
+        canPublic: true,
+        error: 0
+      }
+    }
+  }catch(e) {
+    return ctx.body = {
+      message: e.toString(),
+      error: -2-
+    }
   }
 })
 
