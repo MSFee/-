@@ -183,7 +183,7 @@ router.get('/queryPaperCanPublic', async ctx => {
   }catch(e) {
     return ctx.body = {
       message: e.toString(),
-      error: -2-
+      error: -2
     }
   }
 })
