@@ -20,7 +20,7 @@ router.prefix('/teacher')
 router.get('/queryMyPaperList', async ctx => {
   let token = ctx.request.header.authorization
   let res_token = getToken(token)
-  const workNumber = res_token.uniqueIdentifier // 从token中获取教师工号
+  const workNumber = res_token.uniqueIdentifier // 从token中获取教师工号s
   try {
     const list = await paperSql.queryMyPaperList(workNumber)
     list.map(item => {})
@@ -228,6 +228,10 @@ router.get('/checkInformation', async ctx => {
     paperInfo.createTime = moment(paperInfo.createTime).format(
       'YYYY-MM-DD HH:mm:ss'
     )
+    const maxScoreList = await complatePaperSql.queryMaxScore(paperId)
+    if(maxScoreList.length) {
+      paperInfo.maxScore = maxScoreList[0].maxScore
+    }
     const titleList = await titleSql.queryAllTitleByPaperId(paperId)
     titleList.map(item => {
       item.createTime = moment(item.createTime).format('YYYY-MM-DD HH:mm:ss')
