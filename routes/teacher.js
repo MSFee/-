@@ -318,17 +318,23 @@ router.post('/changeTitleInfo', async ctx => {
       error: -1
     })
   }
+  if (!params.titleId) {
+    return (ctx.body = {
+      message: '题目ID不能为空',
+      error: -1
+    })
+  }
   if (!params.answer) {
     return (ctx.body = {
       message: '题目答案不能为空',
       error: -1
     })
   }
-  if (!params.titleId) {
-    return (ctx.body = {
-      message: '题目ID不能为空',
+  if(!((await testAnswer(ctx, parmas.answer)).normalOperation)) {
+    return ctx.body = {
+      message: '您的答案无法正确执行',
       error: -1
-    })
+    }
   }
   try {
     await titleSql.changeTitleInfo(params)
