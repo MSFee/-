@@ -121,6 +121,7 @@ router.post('/createTitle', async ctx => {
     // 获取题目创建时间
     const createTime = moment(new Date()).format('YYYY-MM-DD HH:mm:ss')
     parmas.createTime = createTime
+    parmas.answer = parmas.answer.replace(/\'/g, '"')
     await titleSql.addtitle(parmas)
     return (ctx.body = {
       message: '题目创建成功',
@@ -330,13 +331,14 @@ router.post('/changeTitleInfo', async ctx => {
       error: -1
     })
   }
-  if(!((await testAnswer(ctx, parmas.answer)).normalOperation)) {
+  if(!((await testAnswer(ctx, params.answer)).normalOperation)) {
     return ctx.body = {
       message: '您的答案无法正确执行',
       error: -1
     }
   }
   try {
+    params.answer = params.answer.replace(/\'/g, '"')
     await titleSql.changeTitleInfo(params)
     return (ctx.body = {
       message: '题目修改成功',
