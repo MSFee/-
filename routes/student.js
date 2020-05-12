@@ -665,7 +665,7 @@ async function testAnswer(answer) {
       resultList = await practiceSql.queryDataTemTable(tableName)
       await practiceSql.deleteTemTable(tableName) // 删除临时表
     }
-      return { message: 'sql正确执行', resultList, truePerform: false}
+      return { message: 'sql正确执行', resultList, truePerform: true}
   } catch (e) {
       return { message: e.toString(), truePerform: false}
   }
