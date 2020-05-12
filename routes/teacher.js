@@ -86,6 +86,12 @@ router.post('/createTitle', async ctx => {
       error: -1
     })
   }
+  if(!((await testAnswer(ctx, parmas.answer)).normalOperation)) {
+    return ctx.body = {
+      message: '您的答案无法正确执行',
+      error: -1
+    }
+  }
   if (!parmas.score) {
     return (ctx.body = {
       message: '分数不能为空',
@@ -338,16 +344,8 @@ router.post('/changeTitleInfo', async ctx => {
   }
 })
 
-// 教师测试答案是否可以正常运行
-router.post('/testAnswer', async ctx => {
-  const answer = ctx.request.body.answer.trim()
-  if (!answer) {
-    return (ctx.body = {
-      message: '答案不能为空',
-      normalOperation: false,
-      error: -1
-    })
-  }
+
+async function testAnswer(ctx, answer) {
   try {
     let arr = answer.split(' ')
     const sqlOptions = ['insert', 'update', 'delete', 'select'] // 只允许有这四种操作
@@ -404,5 +402,19 @@ router.post('/testAnswer', async ctx => {
       error: -1
     })
   }
+}
+
+
+// 教师测试答案是否可以正常运行
+router.post('/testAnswer', async ctx => {
+  const answer = ctx.request.body.answer.trim()
+  if (!answer) {
+    return (ctx.body = {
+      message: '答案不能为空',
+      normalOperation: false,
+      error: -1
+    })
+  }
+  return testAnswer(ctx, answer);
 })
 module.exports = router
