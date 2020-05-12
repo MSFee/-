@@ -396,6 +396,7 @@ async function testAnswer(ctx, answer) {
       await practiceSql.perform(temAnswer)
       // 3、查询临时表中的所有数据
       resultList = await practiceSql.queryDataTemTable(tableName)
+      await practiceSql.deleteTemTable(tableName) // 删除临时表
     }
     return ctx.body = {
       message: 'sql正确执行',

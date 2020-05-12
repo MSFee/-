@@ -625,4 +625,87 @@ router.get('/paperBeenCompleted', async ctx => {
     }
   }
 })
+
+
+// 测试sql语句是否能够正确执行
+async function testAnswer(answer) {
+  try {
+    let arr = answer.split(' ')
+    const sqlOptions = ['insert', 'update', 'delete', 'select'] // 只允许有这四种操作
+    if (sqlOptions.indexOf(arr[0]) === -1) {
+       return {message: '非法的sql语句, sql只能是插入、更新、删除、查找', truePerform: false}
+    }
+    let resultList = []
+    if (arr[0] === 'select') {
+      // 表示查找操作时
+      resultList = await practiceSql.perform(answer)
+    } else {
+      // 其他操作时
+      const tem = arr.filter(item => {
+        if (item.indexOf('_info') !== -1) {
+          return item
+        }
+      })
+      // 如果没有提取到表名
+      if (!tem.length) {
+          return { message: '非法的sql语句，sql中没有包含正确的表名', truePerform: false}
+      }
+      const hash = Math.random()
+        .toString(36)
+        .substr(2)
+      const tableName = tem[0] + hash
+      await practiceSql.createTemTable(tableName, tem[0]) // 创建临时表
+      // 替换sql语句
+      let temAnswer = answer.replace(/\w+_info/g, () => {
+        return tableName
+      })
+      // 2、在临时表中执行sql语句
+      await practiceSql.perform(temAnswer)
+      // 3、查询临时表中的所有数据
+      resultList = await practiceSql.queryDataTemTable(tableName)
+      await practiceSql.deleteTemTable(tableName) // 删除临时表
+    }
+      return { message: 'sql正确执行', resultList, truePerform: false}
+  } catch (e) {
+      return { message: e.toString(), truePerform: false}
+  }
+}
+
+// 学生做题结果比对
+router.post('/resultContrast', async ctx => {
+  let token = ctx.request.header.authorization
+  let res_token = getToken(token)
+  const studentId = res_token.uniqueIdentifier // 从token中获取学生学号
+  const titleId = ctx.request.body.titleId
+  if(!titleId) {
+    return ctx.body = {
+      message: '题目ID不能为空',
+      error: -1
+    }
+  }
+  try{
+    let submitAnswer = ''
+    const complateList = await complateTitleSql.getTitleStatus(studentId, titleId)
+    if(complateList.length) {
+      submitAnswer = complateList[0].submitAnswer 
+    }
+    let trueAnswer = ''
+    const titleList = await titleSql.queryInfoById(titleId)
+    if(titleList.length) {
+      trueAnswer = titleList[0].answer
+    }
+    const studentInfo = await testAnswer(submitAnswer)
+    const trueInfo = await testAnswer(trueAnswer)
+    return ctx.body = {
+      studentInfo,
+      trueInfo,
+      error: 0
+    }
+  }catch(e) {
+    return ctx.body = {
+      message: e.toString(),
+      error: -2
+    }
+  }
+})
 module.exports = router
