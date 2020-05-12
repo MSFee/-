@@ -161,30 +161,30 @@ router.put('/publishPaper', async ctx => {
 // 判断一张试卷是否可以发布
 router.get('/queryPaperCanPublic', async ctx => {
   const paperId = ctx.query.paperId
-  if(!paperId) {
-    return ctx.body = {
+  if (!paperId) {
+    return (ctx.body = {
       message: '试卷ID不能为空',
       error: -1
-    }
+    })
   }
-  try{
+  try {
     const titleList = await titleSql.queryAllTitleByPaperId(paperId)
-    if(!titleList.length) {
-      return ctx.body = {
+    if (!titleList.length) {
+      return (ctx.body = {
         canPublic: false,
         error: 0
-      }
-    }else {
-      return ctx.body = {
+      })
+    } else {
+      return (ctx.body = {
         canPublic: true,
         error: 0
-      }
+      })
     }
-  }catch(e) {
-    return ctx.body = {
+  } catch (e) {
+    return (ctx.body = {
       message: e.toString(),
       error: -2
-    }
+    })
   }
 })
 
@@ -200,12 +200,12 @@ router.get('/queryPaperHaveCompalte', async ctx => {
         hasComplate: true,
         error: 0
       })
-    }else {
-      return ctx.body = {
+    } else {
+      return (ctx.body = {
         message: '可以撤销发布',
         hasComplate: false,
         error: 0
-      }
+      })
     }
   } catch (e) {
     return (ctx.body = {
@@ -260,7 +260,7 @@ router.get('/checkInformation', async ctx => {
       'YYYY-MM-DD HH:mm:ss'
     )
     const maxScoreList = await complatePaperSql.queryMaxScore(paperId)
-    if(maxScoreList.length) {
+    if (maxScoreList.length) {
       paperInfo.maxScore = maxScoreList[0].maxScore
     }
     const titleList = await titleSql.queryAllTitleByPaperId(paperId)
@@ -334,6 +334,74 @@ router.post('/changeTitleInfo', async ctx => {
     return (ctx.body = {
       message: e.toString(),
       error: 0
+    })
+  }
+})
+
+// 教师测试答案是否可以正常运行
+router.post('/testAnswer', async ctx => {
+  const answer = ctx.request.body.answer.trim()
+  if (!answer) {
+    return (ctx.body = {
+      message: '答案不能为空',
+      normalOperation: false,
+      error: -1
+    })
+  }
+  try {
+    let arr = answer.split(' ')
+    const sqlOptions = ['insert', 'update', 'delete', 'select'] // 只允许有这四种操作
+    if (sqlOptions.indexOf(arr[0]) === -1) {
+      return (ctx.body = {
+        message: '非法的sql语句, sql只能是插入、更新、删除、查找',
+        normalOperation: false,
+        error: -1
+      })
+    }
+    let resultList = []
+    if (arr[0] === 'select') {
+      // 表示查找操作时
+      resultList = await practiceSql.perform(answer)
+    } else {
+      // 其他操作时
+      const tem = arr.filter(item => {
+        if (item.indexOf('_info') !== -1) {
+          return item
+        }
+      })
+      // 如果没有提取到表名
+      if (!tem.length) {
+        return (ctx.body = {
+          message: '非法的sql语句，sql中没有包含正确的表名',
+          normalOperation: false,
+          error: -1
+        })
+      }
+      const hash = Math.random()
+        .toString(36)
+        .substr(2)
+      const tableName = tem[0] + hash
+      await practiceSql.createTemTable(tableName, tem[0]) // 创建临时表
+      // 替换sql语句
+      let temAnswer = answer.replace(/\w+_info/g, () => {
+        return tableName
+      })
+      // 2、在临时表中执行sql语句
+      await practiceSql.perform(temAnswer)
+      // 3、查询临时表中的所有数据
+      resultList = await practiceSql.queryDataTemTable(tableName)
+    }
+    return ctx.body = {
+      message: 'sql正确执行',
+      resultList,
+      normalOperation: true,
+      error: 0
+    }
+  } catch (e) {
+    return (ctx.body = {
+      message: e.toString(),
+      normalOperation: false,
+      error: -1
     })
   }
 })
