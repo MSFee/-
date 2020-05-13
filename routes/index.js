@@ -2,6 +2,7 @@ const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
 const router = require('koa-router')()
+var svgCaptcha = require('svg-captcha')
 const nodemailer = require('nodemailer')
 const moment = require('moment')
 const axios = require('axios')
@@ -14,29 +15,32 @@ const paperSql = require('../allSqlStatement/paperSql')
 const titleSql = require('../allSqlStatement/titleSql')
 const practiceSql = require('../allSqlStatement/practiceSql')
 
+const codeMap = new Map();
+
 let transporter = nodemailer.createTransport({
   service: 'qq',
   auth: {
-    user: '1360023821',
-    pass: 'zrqdhmlmweamijgc'
+    user: '3159172007',
+    pass: 'pyvvsnxpippxdcfi'
   }
 })
 
-// const mailOptions = {
-//   from: '1360023821@qq.com',
-//   // to: 'msFee40000@163.com',
-//   to: 'yuki2072@163.com',
-//   subject: '邮件测试',
-//   html: fs.createReadStream(path.resolve(__dirname, 'test.html'))
-// }
+function sendMail (email, code) {
+  const mailOptions = {
+    from: '3159172007@qq.com',
+    to: email,
+    subject: 'SQL测试训练平台重置密码',
+    html:  `<b>您的验证码为 <span style="color: red;">${code}</span>    </b>, 10分钟后过期。
+    <br>
+    此为系统邮件，请勿直接回复！`
+  }
 
-// transporter.sendMail(mailOptions, (err, info) => {
-//   if(err) {
-//     console.log(err)
-//     return
-//   }
-//   console.log('发送成功')
-// })
+  transporter.sendMail(mailOptions, (err, info) => {
+    if (err) {
+      return
+    }
+  })
+}
 
 // 学生、教师注册接口
 router.post('/register', async ctx => {
@@ -191,5 +195,134 @@ router.get('/getAllTitle', async ctx => {
   }
 })
 
+// 获取验证码
+function getCaptcha () {
+  var captcha = svgCaptcha.create({
+    // 翻转颜色
+    inverse: false,
+    ignoreChars: '0o1i',
+    // 字体大小
+    fontSize: 50,
+    // 噪声线条数
+    noise: 2,
+    // 宽度
+    width: 100,
+    // 高度
+    height: 50,
+    background: '#cc9966'
+  })
+  const value = captcha.text.toLowerCase()
+  return {
+    url: captcha.data,
+    value
+  }
+}
 
+router.get('/getValiteCode', async ctx => {
+  const data = getCaptcha()
+  ctx.response.type = 'image/svg+xml'
+  return (ctx.body = {
+    url: data.url,
+    value: data.value
+  })
+})
+
+// 校验信息
+router.post('/checkInfo', async ctx => {
+  const params = ctx.request.body
+  if (!params.email) {
+    return (ctx.body = {
+      message: '邮箱不能为空',
+      error: -1
+    })
+  }
+  const status = params.status
+  try {
+    if (status === 0) {
+      // 学生
+      const list = await userSql.queryPasswordByStudentId(params.studentId)
+      if (!list.length) {
+        return (ctx.body = {
+          message: '学号不存在',
+          error: -1
+        })
+      }
+      if (list[0].email !== params.email) {
+        return (ctx.body = {
+          message: '邮箱错误',
+          error: -1
+        })
+      }
+    } else {
+      // 教师
+      const list = await userSql.queryPasswordByWorkNumber(params.workNumber)
+      if (!list.length) {
+        return (ctx.body = {
+          message: '工号不存在',
+          error: -1
+        })
+      }
+      if (list[0].email !== params.email) {
+        return (ctx.body = {
+          message: '邮箱错误',
+          error: -1
+        })
+      }
+    }
+    const hash = Math.random()
+    .toString(36)
+    .substr(2).slice(0,6)
+    codeMap.set(hash, new Date())
+    sendMail(params.email, hash)
+    return (ctx.body = {
+      message: '正确',
+      error: 0
+    })
+  } catch (e) {
+    return (ctx.body = {
+      message: e.toString(),
+      error: -1
+    })
+  }
+})
+
+// 校验邮箱验证码
+router.post('/checkEmail', async ctx=> {
+  const params = ctx.request.body
+  const code = params.code
+  if(codeMap.has(code)) {
+    codeMap.delete(code)
+    return ctx.body = {
+      message: '成功',
+      error: 0
+    }
+  }else {
+    return ctx.body = {
+      message: '验证码错误',
+      error: -1
+    }
+  }
+})
+// 修改密码
+router.post('/changePassword', async ctx => {
+  const params = ctx.request.body
+  try{
+    if(params.status === 0) {
+      // 学生
+      await userSql.changeStudentPassword(params.id, params.password)
+    }else {
+      // 教师
+      await userSql.changeWorkNumberPassword(params.id, params.password)
+    }
+    return ctx.body = {
+      message: '修改成功',
+      error: 0
+    }
+  }catch(e) {
+    return ctx.body = {
+      message: e.toString(),
+      error: -2
+    }
+  }
+})
 module.exports = router

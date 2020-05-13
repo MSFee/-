@@ -426,4 +426,52 @@ router.post('/testAnswer', async ctx => {
   }
   return testAnswer(ctx, answer);
 })
+
+// 教师查看某一张试卷的完成情况
+
+router.get('/paperComplateInfo', async ctx => {
+   const paperId = ctx.query.paperId
+   if(!paperId) {
+     return ctx.body = {
+       message: '试卷ID不能为空',
+       error: -1
+     }
+   }
+   try{
+     const paperList = await paperSql.queryPaperCount(paperId)
+     const totalScoreList = await titleSql.queryTotalScore(paperId)
+     const totalScore = totalScoreList[0].totalScore; // 总分
+     const count = paperList[0].count
+     const complateList = await complatePaperSql.queryAllStudentInfo(paperId)
+     const scoreArr = []
+     let passCount = 0
+     for(let i = 0; i < complateList.length; i++) {
+       const userInfoList = await userSql.queryStudentInfo(complateList[i].studentId)
+       const obj = userInfoList[0]
+       complateList[i].userName = obj.userName
+       complateList[i].school = obj.school
+       complateList[i].professional = obj.professional
+       complateList[i].complateTime = moment(complateList[i].complateTime).format('YYYY-MM-DD HH:mm:ss')
+       scoreArr.push(complateList[i].score)
+       delete complateList[i].studentId
+     }
+     // 统计及格的人数
+     scoreArr.map(item => {
+       if(totalScore * 0.6 <= item) {
+          passCount++
+       }
+     })
+
+     return ctx.body = {
+       studentList: complateList,
+       pass: Number((passCount / count).toFixed(2))*100,
+       error: 0
+     }
+   }catch(e) {
+     return ctx.body = {
+       message: e.toString(),
+       error: -2
+     }
+   }
+})
 module.exports = router

@@ -118,8 +118,8 @@ router.get('/getPaperList', async ctx => {
     const total = countList[0]['count(*)']
     return (ctx.body = {
       list,
-      page,
-      size,
+      page: Number(page),
+      size: Number(size),
       total,
       totalPage: Math.ceil(total / Number(size)),
       error: 0
@@ -571,6 +571,7 @@ router.post('/submitPaper', async ctx => {
     }
   }
   try{
+    const complateList = await complatePaperSql.queryPaperList(studentId, paperId)
     const complateTime = moment(new Date()).format('YYYY-MM-DD HH:mm:ss')
     const list = await complateTitleSql.getTotalScore(paperId, studentId)
     const params = {
@@ -579,10 +580,13 @@ router.post('/submitPaper', async ctx => {
       complateTime,
       score: list[0].total
     }
-    await complatePaperSql.addRecord(params)
-    await paperSql.addPaperCount(paperId)
+    if(!complateList.length) {
+      await complatePaperSql.addRecord(params)
+      await paperSql.addPaperCount(paperId)
+    }
     return ctx.body = {
       message: '试卷完成成功',
+      score: list[0].total,
       error:0
     }
   }catch(e) {
@@ -708,4 +712,48 @@ router.post('/resultContrast', async ctx => {
     }
   }
 })
+
+
+// 学生获取做题记录
+router.get('/getAllComplatePaper', async ctx => {
+  let token = ctx.request.header.authorization
+  let res_token = getToken(token)
+  const studentId = res_token.uniqueIdentifier // 从token中获取学生学号
+  const page = ctx.query.page || 1
+  const size = ctx.query.size || 5
+  try{
+    const list = await complatePaperSql.querPaperComplate(studentId, page, size)
+    const totalList = await complatePaperSql.querPaperComplateTotal(studentId)
+    for(let i = 0; i < list.length; i++) {
+      list[i].complateTime = moment(list[i].complateTime).format('YYYY-MM-DD HH:mm:ss')
+      const paperNameList = await paperSql.queryPaperDetailInfo(list[i].paperId)
+      list[i].paperName = paperNameList[0].paperName
+      const maxScoreList = await complatePaperSql.queryMaxScore(list[i].paperId)
+      list[i].maxScore = maxScoreList[0].maxScore
+
+      // 获取排名
+      const scoreArrList  = await complatePaperSql.queryAllStudentScore(list[i].paperId)
+      const scoreArr = []
+      scoreArrList.map(item => {
+        scoreArr.push(item.score)
+      })
+      let index = scoreArr.indexOf(list[i].score)
+      while(index && scoreArr[index - 1] === scoreArr[index]) {
+        index --;
+      }
+      list[i].ranking = ++index
+    }
+    return ctx.body = {
+      list,
+      total: totalList[0].total,
+      error: 0
+    }
+  }catch(e) {
+    return ctx.body = {
+      message: e.toString(),
+      error: -2
+    }
+  }
+})
+
 module.exports = router

@@ -33,8 +33,13 @@ let userSql = {
   },
   // 根据学号查询学生密码
   queryPasswordByStudentId: function(studentId) {
-    let _sql = `select password from student_info where studentId = '${studentId}'`;
+    let _sql = `select password, email from student_info where studentId = '${studentId}'`;
     return allServices.query(_sql);
+  },
+  // 根据学号查询学生名称和学校以及专业
+  queryStudentInfo: function(studentId) {
+    let _sql = `select userName, school, professional from student_info where studentId = ${studentId}`
+    return allServices.query(_sql)
   },
   // 查询邮箱是否唯一
   queryEmail: function(email, status) {
@@ -49,7 +54,7 @@ let userSql = {
   },
     // 根据工号查询教师密码
   queryPasswordByWorkNumber: function(workNumber) {
-    let _sql = `select password from teacher_info where workNumber = ${workNumber}`;
+    let _sql = `select password, email from teacher_info where workNumber = ${workNumber}`;
     return allServices.query(_sql);
  },
  // 根据工号查询教师名称
@@ -66,6 +71,16 @@ let userSql = {
   queryWorkNumberByName: function(userName) {
     let _sql = `select workNumber from teacher_info where userName = '${userName}'`;
     return allServices.query(_sql);
-  }
+  },
+  // 学生修改密码
+  changeStudentPassword:function(studentId, password) {
+    let _sql = `update student_info set password = '${password}' where studentId = ${studentId}`
+    return allServices.query(_sql)
+  } ,
+  // 教师修改密码
+  changeWorkNumberPassword:function(workNumber, password) {
+    let _sql = `update teacher_info set password = '${password}' where workNumber = ${workNumber}`
+    return allServices.query(_sql)
+  } ,
 }
 module.exports = userSql

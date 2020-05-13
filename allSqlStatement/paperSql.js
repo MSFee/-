@@ -25,6 +25,11 @@ let parperSql = {
       let _sql = `select paperId, paperName, createTime, count, maxScore from paper_info where paperId = ${paperId}`
       return allServices.query(_sql)
     },
+      // 根据试卷ID查询试卷的完成次数
+      queryPaperCount: function (paperId) {
+        let _sql = `select count from paper_info where paperId = ${paperId}`
+        return allServices.query(_sql)
+      },
   // 查询所有的试卷
   queryAllPaperList: function (queryFiled, page, size, sorting) {
     let _sql = `select paperId, paperName, workNumber, createTime, count from paper_info`;

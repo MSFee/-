@@ -46,5 +46,10 @@ let titleSql = {
         let _sql = `select count(*) from title_info where paperId = ${paperId}`
         return allServices.query(_sql);
      },
+     // 根据ID查询改试卷的总分
+     queryTotalScore: function(paperId) {
+         let _sql = `select sum(score) as totalScore from title_info where paperId = ${paperId}`
+         return allServices.query(_sql)
+     }
 }
 module.exports = titleSql;
