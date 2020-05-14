@@ -33,7 +33,7 @@ let userSql = {
   },
   // 根据学号查询学生密码
   queryPasswordByStudentId: function(studentId) {
-    let _sql = `select password, email from student_info where studentId = '${studentId}'`;
+    let _sql = `select password, email, userName from student_info where studentId = '${studentId}'`;
     return allServices.query(_sql);
   },
   // 根据学号查询学生名称和学校以及专业
@@ -54,7 +54,7 @@ let userSql = {
   },
     // 根据工号查询教师密码
   queryPasswordByWorkNumber: function(workNumber) {
-    let _sql = `select password, email from teacher_info where workNumber = ${workNumber}`;
+    let _sql = `select password, email, userName from teacher_info where workNumber = ${workNumber}`;
     return allServices.query(_sql);
  },
  // 根据工号查询教师名称

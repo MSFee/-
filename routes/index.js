@@ -15,7 +15,7 @@ const paperSql = require('../allSqlStatement/paperSql')
 const titleSql = require('../allSqlStatement/titleSql')
 const practiceSql = require('../allSqlStatement/practiceSql')
 
-const codeMap = new Map();
+const codeMap = new Map()
 
 let transporter = nodemailer.createTransport({
   service: 'qq',
@@ -24,13 +24,13 @@ let transporter = nodemailer.createTransport({
     pass: 'pyvvsnxpippxdcfi'
   }
 })
-
+// 发送邮件
 function sendMail (email, code) {
   const mailOptions = {
     from: '3159172007@qq.com',
     to: email,
     subject: 'SQL测试训练平台重置密码',
-    html:  `<b>您的验证码为 <span style="color: red;">${code}</span>    </b>, 10分钟后过期。
+    html: `<b>您的验证码为 <span style="color: red;">${code}</span>    </b>, 10分钟后过期。
     <br>
     此为系统邮件，请勿直接回复！`
   }
@@ -107,6 +107,7 @@ router.post('/login', async ctx => {
         })
       }
       const password = isStudentId[0].password
+      const userName = isStudentId[0].userName
       if (password !== params.password) {
         return (ctx.body = {
           message: '密码错误',
@@ -118,6 +119,8 @@ router.post('/login', async ctx => {
       return (ctx.body = {
         message: '登录成功',
         token: token,
+        status: 0,
+        userName,
         error: 0
       })
     } else {
@@ -131,6 +134,7 @@ router.post('/login', async ctx => {
         })
       }
       const password = isWorkNumber[0].password
+      const userName = isWorkNumber[0].userName
       if (password !== params.password) {
         return (ctx.body = {
           message: '密码错误',
@@ -142,6 +146,8 @@ router.post('/login', async ctx => {
       return (ctx.body = {
         message: '登录成功',
         token: token,
+        status: 1,
+        userName,
         error: 0
       })
     }
@@ -195,7 +201,7 @@ router.get('/getAllTitle', async ctx => {
   }
 })
 
-// 获取验证码
+// 生成验证码
 function getCaptcha () {
   var captcha = svgCaptcha.create({
     // 翻转颜色
@@ -218,6 +224,7 @@ function getCaptcha () {
   }
 }
 
+// 获取图片验证码
 router.get('/getValiteCode', async ctx => {
   const data = getCaptcha()
   ctx.response.type = 'image/svg+xml'
@@ -270,8 +277,9 @@ router.post('/checkInfo', async ctx => {
       }
     }
     const hash = Math.random()
-    .toString(36)
-    .substr(2).slice(0,6)
+      .toString(36)
+      .substr(2)
+      .slice(0, 6)
     codeMap.set(hash, new Date())
     sendMail(params.email, hash)
     return (ctx.body = {
@@ -287,42 +295,42 @@ router.post('/checkInfo', async ctx => {
 })
 
 // 校验邮箱验证码
-router.post('/checkEmail', async ctx=> {
+router.post('/checkEmail', async ctx => {
   const params = ctx.request.body
   const code = params.code
-  if(codeMap.has(code)) {
+  if (codeMap.has(code)) {
     codeMap.delete(code)
-    return ctx.body = {
+    return (ctx.body = {
       message: '成功',
       error: 0
-    }
-  }else {
-    return ctx.body = {
+    })
+  } else {
+    return (ctx.body = {
       message: '验证码错误',
       error: -1
-    }
+    })
   }
 })
 // 修改密码
 router.post('/changePassword', async ctx => {
   const params = ctx.request.body
-  try{
-    if(params.status === 0) {
+  try {
+    if (params.status === 0) {
       // 学生
       await userSql.changeStudentPassword(params.id, params.password)
-    }else {
+    } else {
       // 教师
       await userSql.changeWorkNumberPassword(params.id, params.password)
     }
-    return ctx.body = {
+    return (ctx.body = {
       message: '修改成功',
       error: 0
-    }
-  }catch(e) {
-    return ctx.body = {
+    })
+  } catch (e) {
+    return (ctx.body = {
       message: e.toString(),
       error: -2
-    }
+    })
   }
 })
 module.exports = router
