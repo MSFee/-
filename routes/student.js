@@ -222,7 +222,7 @@ router.post('/completeTitle', async ctx => {
   if (trueAnswer.split(' ')[0] !== methodsFlag) {
     return errorMessFun(paperId, ctx, '答案错误,错误信息为：sql语句错误', titleId, studentId, answer, trueAnswer)
   }
-  if (methodsFlag !== 'select') {
+  if (methodsFlag.toLowerCase() !== 'select') {
     // 非查询操作
 
     // 提取学生答案中涉及到的表名
@@ -636,11 +636,11 @@ async function testAnswer(answer) {
   try {
     let arr = answer.split(' ')
     const sqlOptions = ['insert', 'update', 'delete', 'select'] // 只允许有这四种操作
-    if (sqlOptions.indexOf(arr[0]) === -1) {
+    if (sqlOptions.indexOf(arr[0]).toLowerCase() === -1) {
        return {message: '非法的sql语句, sql只能是插入、更新、删除、查找', truePerform: false}
     }
     let resultList = []
-    if (arr[0] === 'select') {
+    if (arr[0].toLowerCase() === 'select') {
       // 表示查找操作时
       resultList = await practiceSql.perform(answer)
     } else {

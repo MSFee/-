@@ -357,7 +357,7 @@ async function testAnswer(ctx, answer) {
   try {
     let arr = answer.split(' ')
     const sqlOptions = ['insert', 'update', 'delete', 'select'] // 只允许有这四种操作
-    if (sqlOptions.indexOf(arr[0]) === -1) {
+    if (sqlOptions.indexOf(arr[0].toLowerCase()) === -1) {
       return (ctx.body = {
         message: '非法的sql语句, sql只能是插入、更新、删除、查找',
         normalOperation: false,
@@ -365,7 +365,7 @@ async function testAnswer(ctx, answer) {
       })
     }
     let resultList = []
-    if (arr[0] === 'select') {
+    if (arr[0].toLowerCase() === 'select') {
       // 表示查找操作时
       resultList = await practiceSql.perform(answer)
     } else {
