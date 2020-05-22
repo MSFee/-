@@ -479,7 +479,6 @@ router.get('/getAllTitleID', async ctx => {
      })
      for(let i = 0; i < arr2.length; i++) {
        const index = arr.indexOf(arr2[i]);
-       console.log(index)
        list[index].isComplate = 1;
      }
      arr = []
@@ -634,13 +633,14 @@ router.get('/paperBeenCompleted', async ctx => {
 // 测试sql语句是否能够正确执行
 async function testAnswer(answer) {
   try {
+    answer = answer.toLowerCase();
     let arr = answer.split(' ')
     const sqlOptions = ['insert', 'update', 'delete', 'select'] // 只允许有这四种操作
-    if (sqlOptions.indexOf(arr[0]).toLowerCase() === -1) {
+    if (sqlOptions.indexOf(arr[0]) === -1) {
        return {message: '非法的sql语句, sql只能是插入、更新、删除、查找', truePerform: false}
     }
     let resultList = []
-    if (arr[0].toLowerCase() === 'select') {
+    if (arr[0] === 'select') {
       // 表示查找操作时
       resultList = await practiceSql.perform(answer)
     } else {
